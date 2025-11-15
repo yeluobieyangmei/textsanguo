@@ -11,6 +11,7 @@ public class 创建角色脚本 : MonoBehaviour
     private string 游戏场景名称 = "主界面";
     public void 创建角色()
     {
+        全局方法类.初始化国家();
         全局变量.所有玩家数据表.Add(new 玩家数据(角色名输入框.text));
         Debug.Log("点击创建角色");
         SceneManager.LoadScene(游戏场景名称);

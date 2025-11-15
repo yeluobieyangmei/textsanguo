@@ -25,7 +25,7 @@ public class 主场景界面显示 : MonoBehaviour
         this.家族信息.text = $"家族:暂无";
         this.国家信息.text = $"国家:暂无";
         this.铜钱信息.text = $"铜钱:{玩家.铜钱}";
-        this.黄金信息.text = $"铜钱:{玩家.黄金}";
+        this.黄金信息.text = $"黄金:{玩家.黄金}";
         this.版本号.text = $"1.0.0";
     }
 }
