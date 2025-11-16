@@ -192,16 +192,32 @@ public class 显示国家列表 : MonoBehaviour
             // 存储国家对象和国家的映射关系
             国家对象映射[克隆对象] = 国家;
 
-            // 为国家对象添加Button组件（如果还没有）
-            Button 国家按钮 = 克隆对象.GetComponent<Button>();
-            if (国家按钮 == null)
+            // 检查是否有Toggle组件
+            Toggle 国家Toggle = 克隆对象.GetComponent<Toggle>();
+            if (国家Toggle != null)
             {
-                国家按钮 = 克隆对象.AddComponent<Button>();
+                // 如果有Toggle组件，使用Toggle的onValueChanged事件
+                国家Toggle.onValueChanged.AddListener((bool 是否选中) => 
+                {
+                    if (是否选中)
+                    {
+                        选择国家(克隆对象, 国家);
+                    }
+                });
             }
+            else
+            {
+                // 如果没有Toggle组件，使用Button组件
+                Button 国家按钮 = 克隆对象.GetComponent<Button>();
+                if (国家按钮 == null)
+                {
+                    国家按钮 = 克隆对象.AddComponent<Button>();
+                }
 
-            // 绑定点击事件
-            int 索引 = i;  // 捕获循环变量
-            国家按钮.onClick.AddListener(() => 选择国家(克隆对象, 国家));
+                // 绑定点击事件
+                int 索引 = i;  // 捕获循环变量
+                国家按钮.onClick.AddListener(() => 选择国家(克隆对象, 国家));
+            }
 
             Debug.Log($"已创建国家对象[{i}]：{国家.国名}({国家.国号})，对象名称：{克隆对象.name}，位置：{克隆对象.transform.localPosition}");
         }
