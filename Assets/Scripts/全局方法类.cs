@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using 国家系统;
+using 玩家数据结构;
 
 public class 全局方法类 : MonoBehaviour
 {
@@ -15,6 +16,33 @@ public class 全局方法类 : MonoBehaviour
 
         国家信息库 国家信息库2 = new 国家信息库();
         国家信息库2.创建一个新的国家("吴国", "吴", "无", "无");
+    }
+
+    public static void 初始化AI玩家()
+    {
+        玩家数据 玩家数据1 = new 玩家数据("曹操");
+        全局变量.所有玩家数据表.Add(玩家数据1);
+        玩家数据1.加入一个国家("魏国");
+        国家信息库 魏国 = 玩家数据1.国家;
+        魏国.国王ID = 玩家数据1.ID;
+
+        玩家数据 玩家数据2 = new 玩家数据("刘备");
+        全局变量.所有玩家数据表.Add(玩家数据2);
+        玩家数据2.加入一个国家("蜀国");
+        国家信息库 蜀国 = 玩家数据2.国家;
+        蜀国.国王ID = 玩家数据2.ID;
+
+        玩家数据 玩家数据3 = new 玩家数据("孙权");
+        全局变量.所有玩家数据表.Add(玩家数据3);
+        玩家数据3.加入一个国家("吴国");
+        国家信息库 吴国 = 玩家数据3.国家;
+        吴国.国王ID = 玩家数据3.ID;
+
+
+        for (int i = 0; i < 全局变量.所有玩家数据表.Count; i++)
+        {
+            Debug.Log($"测试  玩家{全局变量.所有玩家数据表[i].姓名}的ID是:{全局变量.所有玩家数据表[i].ID}");
+        }
     }
 
     public static 国家信息库 获取指定名字的国家(string 名字)

@@ -8,6 +8,8 @@ namespace 国家系统
     public class 国家信息库
     {
         public int 国王ID;
+        public int 大都督ID = -1;
+        public int 丞相ID = -1;
         public int 国家ID;
         public string 国名;
         public string 国号;
