@@ -8,6 +8,7 @@ using 国家系统;
 public class 国家功能显示 : MonoBehaviour
 {
     public 建国脚本 建国脚本;
+    public 更换国家脚本 更换国家脚本;
     public Text 国名;
     public Text 国王;
     public Text 大都督;
@@ -37,5 +38,10 @@ public class 国家功能显示 : MonoBehaviour
     public void 点击建国按钮()
     {
         建国脚本.gameObject.SetActive(true);
+    }
+
+    public void 点击换国按钮()
+    {
+        更换国家脚本.gameObject.SetActive(true);
     }
 }
