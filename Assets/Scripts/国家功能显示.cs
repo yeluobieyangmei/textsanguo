@@ -18,6 +18,7 @@ public class 国家功能显示 : MonoBehaviour
     public Text 科技;
     public Button 建国按钮;
     public Button 换国按钮;
+    public 学习脚本 学习脚本;
 
     private void OnEnable()
     {
@@ -42,6 +43,7 @@ public class 国家功能显示 : MonoBehaviour
 
     public void 点击换国按钮()
     {
-        更换国家脚本.gameObject.SetActive(true);
+        //更换国家脚本.gameObject.SetActive(true);
+        学习脚本.gameObject.SetActive(true);
     }
 }
