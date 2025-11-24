@@ -1,0 +1,41 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using 玩家数据结构;
+
+public class 家族信息显示 : MonoBehaviour
+{
+    public GameObject 无家族界面;
+    public GameObject 信息显示界面;
+    public void OnEnable()
+    {
+        刷新显示();
+    }
+
+    public void 刷新显示()
+    {
+        玩家数据 当前玩家 = 全局变量.所有玩家数据表[全局变量.当前身份];
+        if (当前玩家.家族 == null)
+        {
+            无家族界面.gameObject.SetActive(true);
+            信息显示界面.gameObject.SetActive(false);
+            Debug.Log($"当前无家族：{当前玩家.家族}");
+        }
+        else
+        {
+            无家族界面.gameObject.SetActive(false);
+            信息显示界面.gameObject.SetActive(true);
+            Debug.Log($"当前有家族：{当前玩家.家族}");
+            信息显示界面.transform.GetChild(0).GetComponent<Text>().text = $"家族名称：{当前玩家.家族.家族名字}";
+            信息显示界面.transform.GetChild(1).GetComponent<Text>().text = $"家族族长：{全局变量.所有玩家数据表[当前玩家.家族.族长ID].姓名}";
+            信息显示界面.transform.GetChild(2).GetComponent<Text>().text = 当前玩家.ID == 当前玩家.家族.族长ID ? "我的职位：族长" : "我的职位族员";
+            信息显示界面.transform.GetChild(3).GetComponent<Text>().text = $"家族等级”：{当前玩家.家族.家族等级}";
+            信息显示界面.transform.GetChild(4).GetComponent<Text>().text = $"家族等级人数：{当前玩家.家族.家族成员.Count}";
+            信息显示界面.transform.GetChild(5).GetComponent<Text>().text = $"家族等级人数：{当前玩家.家族.家族繁荣值}";
+            信息显示界面.transform.GetChild(6).GetComponent<Text>().text = $"家族等级人数：{当前玩家.家族.国家排名}";
+            信息显示界面.transform.GetChild(7).GetComponent<Text>().text = $"家族等级人数：{当前玩家.家族.世界排名}";
+            信息显示界面.transform.GetChild(8).GetComponent<Text>().text = $"家族等级人数：{当前玩家.家族.家族资金}";
+        }
+    }
+}
