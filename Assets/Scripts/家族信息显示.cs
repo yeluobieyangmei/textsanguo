@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using 玩家数据结构;
+using 国家系统;
 
 public class 家族信息显示 : MonoBehaviour
 {
     public GameObject 无家族界面;
     public GameObject 信息显示界面;
+    public Button 退出家族按钮;
+    public Button 解散家族按钮;
     public void OnEnable()
     {
         刷新显示();
@@ -30,12 +33,31 @@ public class 家族信息显示 : MonoBehaviour
             信息显示界面.transform.GetChild(0).GetComponent<Text>().text = $"家族名称：{当前玩家.家族.家族名字}";
             信息显示界面.transform.GetChild(1).GetComponent<Text>().text = $"家族族长：{全局变量.所有玩家数据表[当前玩家.家族.族长ID].姓名}";
             信息显示界面.transform.GetChild(2).GetComponent<Text>().text = 当前玩家.ID == 当前玩家.家族.族长ID ? "我的职位：族长" : "我的职位族员";
-            信息显示界面.transform.GetChild(3).GetComponent<Text>().text = $"家族等级”：{当前玩家.家族.家族等级}";
-            信息显示界面.transform.GetChild(4).GetComponent<Text>().text = $"家族等级人数：{当前玩家.家族.家族成员.Count}";
-            信息显示界面.transform.GetChild(5).GetComponent<Text>().text = $"家族等级人数：{当前玩家.家族.家族繁荣值}";
-            信息显示界面.transform.GetChild(6).GetComponent<Text>().text = $"家族等级人数：{当前玩家.家族.国家排名}";
-            信息显示界面.transform.GetChild(7).GetComponent<Text>().text = $"家族等级人数：{当前玩家.家族.世界排名}";
-            信息显示界面.transform.GetChild(8).GetComponent<Text>().text = $"家族等级人数：{当前玩家.家族.家族资金}";
+            信息显示界面.transform.GetChild(3).GetComponent<Text>().text = $"家族等级：{当前玩家.家族.家族等级}";
+            信息显示界面.transform.GetChild(4).GetComponent<Text>().text = $"家族人数：{当前玩家.家族.家族成员.Count}";
+            信息显示界面.transform.GetChild(5).GetComponent<Text>().text = $"家族繁荣：{当前玩家.家族.家族繁荣值}";
+            信息显示界面.transform.GetChild(6).GetComponent<Text>().text = $"国内排名：{当前玩家.家族.国家排名}";
+            信息显示界面.transform.GetChild(7).GetComponent<Text>().text = $"世界排名：{当前玩家.家族.世界排名}";
+            信息显示界面.transform.GetChild(8).GetComponent<Text>().text = $"家族资金：{当前玩家.家族.家族资金}";
+            if (当前玩家.ID == 当前玩家.家族.族长ID)
+            {
+                退出家族按钮.gameObject.SetActive(false);
+                解散家族按钮.gameObject.SetActive(true);
+            }
+            else
+            {
+                退出家族按钮.gameObject.SetActive(true);
+                解散家族按钮.gameObject.SetActive(false);
+            }
+        }
+    }
+
+    public void 解散家族()
+    {
+        玩家数据 当前玩家 = 全局变量.所有玩家数据表[全局变量.当前身份];
+        if (当前玩家.解散家族())
+        {
+            刷新显示();
         }
     }
 }

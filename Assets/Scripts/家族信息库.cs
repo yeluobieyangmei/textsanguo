@@ -9,8 +9,8 @@ namespace 国家系统
     {
         public string 家族名字;
         public int 家族ID;
-        public int 族长ID;
-        public int 副族长ID;
+        public int 族长ID = -1;
+        public int 副族长ID = -1;
         public int 家族等级 = 1;
         public int 家族繁荣值;
         public int 家族资金;

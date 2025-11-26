@@ -330,15 +330,15 @@ GameObject:
   - component: {fileID: 122638813}
   - component: {fileID: 122638816}
   - component: {fileID: 122638815}
-  - component: {fileID: 122638814}
   - component: {fileID: 122638817}
+  - component: {fileID: 122638814}
   m_Layer: 0
   m_Name: "\u901A\u7528\u63D0\u793A\u6846"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &122638813
 RectTransform:
   m_ObjectHideFlags: 0
@@ -433,6 +433,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7abb947d080433d44861245191b30486, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  "\u9762\u677F": {fileID: 1760947792}
   "\u63D0\u793A\u6587\u672C": {fileID: 2022738433}
 --- !u!1 &196631273
 GameObject:
@@ -767,7 +768,6 @@ MonoBehaviour:
   "\u7236\u5BF9\u8C61": {fileID: 2040251016}
   "\u8981\u514B\u9686\u7684\u5BF9\u8C61": {fileID: 681168022}
   "\u56FD\u5BB6\u529F\u80FD\u663E\u793A": {fileID: 0}
-  "\u901A\u7528\u63D0\u793A\u6846": {fileID: 0}
 --- !u!1 &310912969
 GameObject:
   m_ObjectHideFlags: 0
@@ -1638,7 +1638,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   "\u89D2\u8272\u540D\u8F93\u5165\u6846": {fileID: 1876530468}
   "\u663E\u793A\u56FD\u5BB6\u5217\u8868": {fileID: 289586309}
-  "\u901A\u7528\u63D0\u793A\u6846": {fileID: 122638817}
 --- !u!1 &705130684
 GameObject:
   m_ObjectHideFlags: 0
@@ -2444,13 +2443,14 @@ GameObject:
   - component: {fileID: 1760947793}
   - component: {fileID: 1760947795}
   - component: {fileID: 1760947794}
+  - component: {fileID: 1760947796}
   m_Layer: 0
   m_Name: "\u663E\u793A\u533A\u57DF"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1760947793
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2511,6 +2511,27 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1760947792}
   m_CullTransparentMesh: 1
+--- !u!223 &1760947796
+Canvas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1760947792}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_RenderMode: 2
+  m_Camera: {fileID: 0}
+  m_PlaneDistance: 100
+  m_PixelPerfect: 0
+  m_ReceivesEvents: 1
+  m_OverrideSorting: 1
+  m_OverridePixelPerfect: 0
+  m_SortingBucketNormalizedSize: 0
+  m_AdditionalShaderChannelsFlag: 0
+  m_SortingLayerID: 0
+  m_SortingOrder: 99
+  m_TargetDisplay: 0
 --- !u!1 &1876530466
 GameObject:
   m_ObjectHideFlags: 0
@@ -3110,7 +3131,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 122638812}
+      - m_Target: {fileID: 1760947792}
         m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
         m_MethodName: SetActive
         m_Mode: 6

@@ -122,6 +122,47 @@ namespace 玩家数据结构
                 Debug.Log("国家是空的");
             }
         }
+
+        public bool 解散家族()
+        {
+            if (this.家族 == null)
+            {
+                通用提示框.显示("你当前没有家族，无法解散!");
+                return false;
+            }
+
+            家族信息库 当前家族 = this.家族;   // 关键：先缓存引用
+
+            Debug.Log($"ID是：{this.ID}");
+            Debug.Log($"族长ID是：{当前家族.族长ID}");
+            Debug.Log($"家族成员是：{当前家族.家族成员.Count}");
+
+            if (this.ID != 当前家族.族长ID)
+            {
+                通用提示框.显示("只有族长才可操作!");
+                return false;
+            }
+
+            foreach (var member in 当前家族.家族成员)
+            {
+                if (member != null)
+                {
+                    member.家族 = null;
+                }
+            }
+            当前家族.家族成员.Clear();
+
+            if (this.国家 != null)
+            {
+                this.国家.家族成员表.Remove(当前家族);
+            }
+            全局变量.所有家族列表.Remove(当前家族);
+
+            this.家族 = null;   // 明确当前玩家也不再有家族引用
+
+            通用提示框.显示("已解散家族!");
+            return true;
+        }
     }
 }
 

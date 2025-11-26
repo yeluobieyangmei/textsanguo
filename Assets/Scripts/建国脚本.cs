@@ -12,67 +12,58 @@ public class 建国脚本 : MonoBehaviour
     public InputField 国号输入框;
     public InputField 公告输入框;
     public InputField 宣言输入框;
-    public 通用提示框 通用提示框;
     private bool 通过;
     private void 信息检测()
     {
         if (国名输入框.text.Length <= 0)
         {
-            通用提示框.提示文本.text = "请输入国家名称!";
-            通用提示框.gameObject.SetActive(true);
+            通用提示框.显示("请输入国家名称!");
             Debug.Log("测试  国名错误");
             通过 = false;
             return;
         }
         else if(国名输入框.text.Length > 4)
         {
-            通用提示框.提示文本.text = "国家名称不可超过4字!";
-            通用提示框.gameObject.SetActive(true);
+            通用提示框.显示("国家名称不可超过4字!");
             通过 = false;
             return;
         }
 
         if (国号输入框.text.Length <= 0)
         {
-            通用提示框.提示文本.text = "请输入国家国号!";
-            通用提示框.gameObject.SetActive(true);
+            通用提示框.显示("请输入国家国号!");
             通过 = false;
             return;
         }
         else if (国号输入框.text.Length > 1)
         {
-            通用提示框.提示文本.text = "国家国号不可超过1字!";
-            通用提示框.gameObject.SetActive(true);
+            通用提示框.显示("国家国号不可超过1字!");
             通过 = false;
             return;
         }
 
         if (公告输入框.text.Length <= 0)
         {
-            通用提示框.提示文本.text = "请输入国家公告!";
-            通用提示框.gameObject.SetActive(true);
+            通用提示框.显示("请输入国家公告!");
             通过 = false;
             return;
         }
         else if (公告输入框.text.Length > 20)
         {
-            通用提示框.提示文本.text = "国家国号不可超过20字!";
-            通用提示框.gameObject.SetActive(true);
+            通用提示框.显示("国家国号不可超过20字!");
             通过 = false;
             return;
         }
 
         if (宣言输入框.text.Length <= 0)
         {
-            通用提示框.提示文本.text = "请输入国家宣言!";
-            通用提示框.gameObject.SetActive(true);
+            通用提示框.显示("请输入国家宣言!");
             通过 = false;
             return;
         }
         else if (宣言输入框.text.Length > 20)
         {
-            通用提示框.提示文本.text = "国家宣言不可超过20字!";
-            通用提示框.gameObject.SetActive(true);
+            通用提示框.显示("国家宣言不可超过20字!");
             通过 = false;
             return;
         }
@@ -84,15 +75,13 @@ public class 建国脚本 : MonoBehaviour
         玩家数据 当前玩家 = 全局变量.所有玩家数据表[全局变量.当前身份];
         if (当前玩家.铜钱 < 10000000)
         {
-            通用提示框.提示文本.text = "铜钱不足1千万！";
-            通用提示框.提示文本.gameObject.SetActive(true);
+            通用提示框.显示("铜钱不足1千万!");
             通过 = false;
             return;
         }
         if (当前玩家.黄金 < 200000)
         {
-            通用提示框.提示文本.text = "黄金不足20万！";
-            通用提示框.提示文本.gameObject.SetActive(true);
+            通用提示框.显示("黄金不足20万!");
             通过 = false;
             return;
         }
@@ -104,6 +93,16 @@ public class 建国脚本 : MonoBehaviour
         财产检测();
         if (!通过)
         {
+            return;
+        }
+        if (全局变量.所有国家列表.Exists(f => f.国名 == 国名输入框.text))
+        {
+            通用提示框.显示("此国名已被占用!");
+            return;
+        }
+        if (全局变量.所有国家列表.Exists(f => f.国号 == 国号输入框.text))
+        {
+            通用提示框.显示("此国号已被占用!");
             return;
         }
         玩家数据 当前玩家 = 全局变量.所有玩家数据表[全局变量.当前身份];

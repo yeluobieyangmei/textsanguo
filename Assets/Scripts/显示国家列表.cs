@@ -12,7 +12,6 @@ public class 显示国家列表 : MonoBehaviour
     List<GameObject> 克隆池 = new List<GameObject>();
     public 国家信息库 当前选中国家 = null;
     public 国家功能显示 国家功能显示;
-    public 通用提示框 通用提示框;
     public void OnEnable()
     {
         刷新显示();
@@ -61,8 +60,7 @@ public class 显示国家列表 : MonoBehaviour
     {
         if (当前选中国家.国名 == 全局变量.所有玩家数据表[全局变量.当前身份].国家.国名)
         {
-            通用提示框.提示文本.text = "已在当前国家!";
-            通用提示框.gameObject.SetActive(true);
+            通用提示框.显示("已在当前国家");
             return;
         }
         全局变量.所有玩家数据表[全局变量.当前身份].加入一个国家(当前选中国家.国名);
