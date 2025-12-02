@@ -29,7 +29,6 @@ public class 创建角色脚本 : MonoBehaviour
 
         全局变量.所有玩家数据表.Add(new 玩家数据(角色名输入框.text));
         全局方法类.初始化AI玩家();
-        Debug.Log("点击创建角色");
         //SceneManager.LoadScene(游戏场景名称);
         this.gameObject.SetActive(false);
         显示国家列表.gameObject.SetActive(true);

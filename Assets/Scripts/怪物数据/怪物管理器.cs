@@ -1,9 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System.Collections.Generic;
 using System;
-namespace 怪物数据
+namespace 怪物数据结构
 {
     public static class 怪物管理器
     {
@@ -19,7 +18,7 @@ namespace 怪物数据
             }
         }
 
-        public static 怪物数据 生成怪物(怪物类型 类型, int 等级 = 1)
+        public static 怪物数据 生成怪物(怪物类型 类型, int 等级, int 生命值, int 攻击力, int 防御力)
         {
             var 池 = 怪物对象池[类型];
             怪物数据 怪物;
@@ -27,11 +26,11 @@ namespace 怪物数据
             if (池.Count > 0)
             {
                 怪物 = 池.Dequeue();
-                怪物.重置(类型, 等级);
+                怪物.重置(类型, 等级, 生命值, 攻击力, 防御力);
             }
             else
             {
-                怪物 = 怪物数据.创建(类型, 等级);
+                怪物 = 怪物数据.创建(类型, 等级, 生命值, 攻击力, 防御力);
             }
 
             活动怪物表[怪物.ID] = 怪物;
@@ -42,6 +41,7 @@ namespace 怪物数据
         {
             if (活动怪物表.TryGetValue(怪物ID, out var 怪物))
             {
+                Debug.Log($"已回收怪物:{怪物.名称}");
                 活动怪物表.Remove(怪物ID);
                 怪物对象池[怪物.类型].Enqueue(怪物);
             }

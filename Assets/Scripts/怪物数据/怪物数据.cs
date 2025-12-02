@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace 怪物数据
+namespace 怪物数据结构
 {
     public enum 怪物类型
     {
@@ -20,13 +20,15 @@ namespace 怪物数据
         public 怪物类型 类型 { get; private set; }
         public string 名称 { get; private set; }
         public int 等级 { get; private set; }
+        public int 铜钱 { get; set; }
+        public int 经验值 { get; set; }
         public 怪物属性 属性 { get; private set; } = new 怪物属性();
 
         // 私有构造函数
         private 怪物数据() { }
 
         // 工厂方法
-        public static 怪物数据 创建(怪物类型 类型, int 等级 = 1)
+        public static 怪物数据 创建(怪物类型 类型, int 等级, int 生命值, int 攻击力, int 防御力)
         {
             var 怪物 = new 怪物数据
             {
@@ -36,7 +38,7 @@ namespace 怪物数据
                 等级 = 等级
             };
 
-            return 怪物.初始化();
+            return 怪物.初始化(生命值, 攻击力, 防御力);
         }
 
         private static int 获取下一个ID()
@@ -56,24 +58,23 @@ namespace 怪物数据
             };
         }
 
-        private 怪物数据 初始化()
+        private 怪物数据 初始化(int 生命值, int 攻击力, int 防御力)
         {
-            // 基础属性计算
-            int 类型倍率 = (int)类型;
-            属性.生命值 = 等级 * 100 * 类型倍率;
-            属性.攻击力 = 等级 * 5 * 类型倍率;
-            属性.防御力 = 等级 * 2 * 类型倍率;
+            属性.生命值 = 生命值;
+            属性.当前生命值 = 属性.生命值;
+            属性.攻击力 = 攻击力;
+            属性.防御力 = 防御力;
             return this;
         }
 
         // 重置怪物状态（用于对象池）
-        public void 重置(怪物类型? 新类型 = null, int? 新等级 = null)
+        // 在 怪物数据.cs 中修改 重置 方法
+        public void 重置(怪物类型 类型, int 等级, int 生命值, int 攻击力, int 防御力)
         {
-            if (新类型.HasValue) 类型 = 新类型.Value;
-            if (新等级.HasValue) 等级 = 新等级.Value;
-
+            this.类型 = 类型;
+            this.等级 = 等级;
             名称 = 获取怪物名称(类型);
-            初始化();
+            初始化(生命值, 攻击力, 防御力);
         }
     }
 }

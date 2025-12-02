@@ -41,7 +41,7 @@ public class 全局方法类 : MonoBehaviour
 
         for (int i = 0; i < 全局变量.所有玩家数据表.Count; i++)
         {
-            Debug.Log($"测试  玩家{全局变量.所有玩家数据表[i].姓名}的ID是:{全局变量.所有玩家数据表[i].ID}");
+            //Debug.Log($"测试  玩家{全局变量.所有玩家数据表[i].姓名}的ID是:{全局变量.所有玩家数据表[i].ID}");
         }
     }
 

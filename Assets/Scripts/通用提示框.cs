@@ -13,7 +13,6 @@ public class 通用提示框 : MonoBehaviour
     private void Awake()
     {
         Instance = this;   // 空对象始终激活，所以 Awake 一定在场景开始时执行
-        Debug.Log("通用提示框 Awake, Instance = " + this.name);
     }
 
     public static void 显示(string 文本)
