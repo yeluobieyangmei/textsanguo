@@ -1,9 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using 玩家数据结构;
 using 怪物数据结构;
+using System.Collections;
 
 public class 攻击对象查看 : MonoBehaviour
 {
@@ -11,18 +10,21 @@ public class 攻击对象查看 : MonoBehaviour
     public Text 标题;
     public Text 对象名字;
     public Text 对象详情;
-    public GameObject 信息显示区;
-    public GameObject 战斗过程显示区;
-    public Button 战斗按钮;
-    public void OnEnable()
+    public 显示战斗日志 显示战斗日志;
+
+    // 添加一个标志位，防止重复点击
+    private bool 正在战斗中 = false;
+
+    private void OnEnable()
     {
+        正在战斗中 = false;  // 重置状态
         对象信息显示();
     }
+
     public void 对象信息显示()
     {
-        信息显示区.gameObject.SetActive(true);
-        战斗过程显示区.gameObject.SetActive(false);
-        战斗按钮.gameObject.SetActive(true);
+        if (当前怪物 == null) return;
+
         标题.text = "怪物信息";
         对象名字.text = $"LV.{当前怪物.等级} {当前怪物.名称}";
         对象详情.text = $"生命值：{当前怪物.属性.当前生命值}\n" +
@@ -33,28 +35,47 @@ public class 攻击对象查看 : MonoBehaviour
 
     public void 开始战斗()
     {
-        // 先更新UI状态
-        信息显示区.gameObject.SetActive(false);
-        战斗过程显示区.gameObject.SetActive(true);
-        战斗按钮.gameObject.SetActive(false);
+        // 防止重复点击
+        if (正在战斗中) return;
+        正在战斗中 = true;
 
-        // 然后开始战斗逻辑
-        var (是否胜利, 被击败的怪物) = 战斗系统.开始战斗(全局变量.所有玩家数据表[全局变量.当前身份], 当前怪物);
+        // 强制更新UI状态
+        Canvas.ForceUpdateCanvases();
 
-        if (是否胜利)
+        try
         {
-            标题.text = "战斗胜利!";
-            // 通知战斗展示界面更新UI
-            var 战斗展示 = FindObjectOfType<战斗展示界面>();
-            if (战斗展示 != null)
+            var (是否胜利, 被击败的怪物) = 战斗系统.开始战斗(
+                全局变量.所有玩家数据表[全局变量.当前身份],
+                当前怪物
+            );
+
+            if (是否胜利)
             {
-                战斗展示.移除已击败怪物(被击败的怪物);
+                显示战斗日志.标题.text = "战斗胜利!";
+                var 战斗展示 = FindObjectOfType<战斗展示界面>();
+                战斗展示?.移除已击败怪物(被击败的怪物);
             }
-            gameObject.SetActive(false);  // 关闭当前怪物信息面板
+            else
+            {
+                显示战斗日志.标题.text = "战斗失败!";
+            }
         }
-        else
+        finally
         {
-            标题.text = "战斗失败!";
+            // 确保无论如何都会执行关闭操作
+            StartCoroutine(延迟关闭面板());
+        }
+    }
+
+    private IEnumerator 延迟关闭面板()
+    {
+        // 等待一帧，确保所有UI更新完成
+        yield return null;
+
+        if (gameObject != null)
+        {
+            gameObject.SetActive(false);
+            显示战斗日志.gameObject.SetActive(true);
         }
     }
 }
