@@ -7,6 +7,7 @@ using 怪物数据结构;
 
 public class 战斗展示界面 : MonoBehaviour
 {
+    public 攻击对象查看 攻击对象查看;
     public Transform 父对象;
     public GameObject 要克隆的对象;
     List<GameObject> 克隆池 = new List<GameObject>();
@@ -43,6 +44,8 @@ public class 战斗展示界面 : MonoBehaviour
                 if (isOn)
                 {
                     当前选中怪物 = 捕获怪物;
+                    攻击对象查看.当前怪物 = 捕获怪物;
+                    攻击对象查看.gameObject.SetActive(true);
                 }
             });
         }
