@@ -11,12 +11,18 @@ public class 攻击对象查看 : MonoBehaviour
     public Text 标题;
     public Text 对象名字;
     public Text 对象详情;
+    public GameObject 信息显示区;
+    public GameObject 战斗过程显示区;
+    public Button 战斗按钮;
     public void OnEnable()
     {
         对象信息显示();
     }
     public void 对象信息显示()
     {
+        信息显示区.gameObject.SetActive(true);
+        战斗过程显示区.gameObject.SetActive(false);
+        战斗按钮.gameObject.SetActive(true);
         标题.text = "怪物信息";
         对象名字.text = $"LV.{当前怪物.等级} {当前怪物.名称}";
         对象详情.text = $"生命值：{当前怪物.属性.当前生命值}\n" +
@@ -27,11 +33,17 @@ public class 攻击对象查看 : MonoBehaviour
 
     public void 开始战斗()
     {
+        // 先更新UI状态
+        信息显示区.gameObject.SetActive(false);
+        战斗过程显示区.gameObject.SetActive(true);
+        战斗按钮.gameObject.SetActive(false);
+
+        // 然后开始战斗逻辑
         var (是否胜利, 被击败的怪物) = 战斗系统.开始战斗(全局变量.所有玩家数据表[全局变量.当前身份], 当前怪物);
 
         if (是否胜利)
         {
-            通用提示框.显示("战斗胜利！");
+            标题.text = "战斗胜利!";
             // 通知战斗展示界面更新UI
             var 战斗展示 = FindObjectOfType<战斗展示界面>();
             if (战斗展示 != null)
@@ -42,7 +54,7 @@ public class 攻击对象查看 : MonoBehaviour
         }
         else
         {
-            通用提示框.显示("战斗失败！");
+            标题.text = "战斗失败!";
         }
     }
 }
