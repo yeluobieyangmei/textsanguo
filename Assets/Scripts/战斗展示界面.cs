@@ -50,7 +50,16 @@ public class 战斗展示界面 : MonoBehaviour
             });
         }
     }
-    
+
+    public void 移除已击败怪物(怪物数据 被击败的怪物)
+    {
+        // 从哥布林列表中移除被击败的怪物
+        哥布林列表.RemoveAll(怪物 => 怪物.ID == 被击败的怪物.ID);
+
+        // 重新刷新UI
+        刷新显示();
+    }
+
     public void 点击哥布林按钮()
     {
         if (哥布林列表.Count <= 0)

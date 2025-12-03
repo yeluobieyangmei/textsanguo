@@ -10,7 +10,7 @@ public static class 战斗系统
     private const float 基础暴击率 = 0.1f;  // 10%基础暴击率
     private const float 暴击伤害倍率 = 1.5f;  // 1.5倍暴击伤害
 
-    public static bool 开始战斗(玩家数据 玩家, 怪物数据 怪物)
+    public static (bool 是否胜利, 怪物数据 被击败的怪物) 开始战斗(玩家数据 玩家, 怪物数据 怪物)
     {
         Debug.Log($"玩家当前的生命值是：{玩家.玩家属性.当前生命值}，攻击力是：{玩家.玩家属性.攻击力}，防御力是：{玩家.玩家属性.防御力}");
         Debug.Log($"怪物当前的生命值是：{怪物.属性.当前生命值}，攻击力是：{怪物.属性.攻击力}，防御力是：{怪物.属性.防御力}");
@@ -38,7 +38,7 @@ public static class 战斗系统
                 {
                     Debug.Log($"\n{怪物.名称} 被击败了！{玩家.姓名} 获得了 {怪物.铜钱} 铜钱 和 {怪物.经验值} 经验值！");
                     怪物管理器.回收怪物(怪物.ID);
-                    return true;
+                    return (true, 怪物);  // 返回胜利和被击败的怪物
                 }
             }
             else
@@ -51,22 +51,16 @@ public static class 战斗系统
                 if (玩家.玩家属性.当前生命值 <= 0)
                 {
                     Debug.Log($"{玩家.姓名} 被击败了...");
-                    return false;
+                    return (false, null);  // 返回失败，没有怪物被击败
                 }
             }
 
             玩家回合 = !玩家回合;  // 切换回合
             if (玩家回合) 回合数++;
-
-            // 显示当前状态
-            /*
-            Debug.Log($"\n{玩家.姓名} HP:{玩家.玩家属性.当前生命值}/{玩家.玩家属性.生命值}");
-            Debug.Log($"{怪物.名称} HP:{怪物.属性.生命值}");
-            Debug.Log("------------------");
-            */
         }
 
-        Debug.Log("=== 战斗结束 ===");
+        // 理论上不会执行到这里
+        return (false, null);
     }
 
     private static int 计算伤害(int 攻击力, int 防御力, float 暴击率 = 0)
