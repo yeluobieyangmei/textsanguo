@@ -7,15 +7,15 @@ namespace 国家系统
 {
     public class 家族信息库
     {
-        public string 家族名字;
-        public int 家族ID;
+        public string 家族名字 { get; set; }
+        public int 家族ID { get; set; }
         public int 族长ID = -1;
         public int 副族长ID = -1;
         public int 家族等级 = 1;
-        public int 家族繁荣值;
-        public int 家族资金;
-        public int 国家排名;
-        public int 世界排名;
+        public int 家族繁荣值 { get; set; }
+        public int 家族资金 { get; set; }
+        public int 国家排名 { get; set; }
+        public int 世界排名 { get; set; }
         public List<玩家数据> 家族成员 = new List<玩家数据> ();
 
         public void 创建一个家族(string 家族名字, 玩家数据 族长)

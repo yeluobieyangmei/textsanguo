@@ -7,9 +7,12 @@ namespace 国家系统
 {
     public class 国家信息库
     {
-        public int 国王ID;
+        public int 国王ID = -1;
         public int 大都督ID = -1;
         public int 丞相ID = -1;
+        public int 太尉ID = -1;
+        public int 御史大夫ID = -1;
+        public int 金吾卫ID = -1;
         public int 国家ID;
         public string 国名;
         public string 国号;
@@ -18,6 +21,9 @@ namespace 国家系统
         public int 铜钱;
         public int 粮食;
         public int 黄金;
+        public 家族信息库 执政家族 { get; set; }
+        public 家族信息库 宣战家族1 { get; set; }
+        public 家族信息库 宣战家族2 { get; set; }
         public List<玩家数据> 国家成员表 = new List<玩家数据>();
         public List<家族信息库> 家族成员表 = new List<家族信息库>();
 

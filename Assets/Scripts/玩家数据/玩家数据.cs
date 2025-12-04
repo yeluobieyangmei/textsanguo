@@ -18,7 +18,7 @@ namespace 玩家数据结构
         public List<称号信息> 称号表 = new List<称号信息>();
         public 国家信息库 国家;
         public 家族信息库 家族;
-        public string 官职;
+        public string 官职 = "国民";
         public 玩家数据(string 姓名)
         {
             初始化一个玩家(姓名);
