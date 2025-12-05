@@ -21,6 +21,8 @@ public class 战场管理器 : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            // 游戏启动时清理可能残留的战场数据
+            清理所有战场();
         }
         else
         {
@@ -210,15 +212,44 @@ public class 战场管理器 : MonoBehaviour
             Debug.Log($"{全局变量.所有玩家数据表[胜利家族.族长ID].姓名} 登顶王位！");
         }
 
+        // 停止战场协程
+        StopCoroutine(战场逻辑协程(战场));
+
         // 清理战场数据
         战场.所属国家.宣战家族1 = null;
         战场.所属国家.宣战家族2 = null;
+
+        // 清空参战玩家列表
+        战场.参战玩家列表.Clear();
+
+        // 重置战场数据
+        战场.家族1积分 = 0;
+        战场.家族2积分 = 0;
+        战场.Boss血量 = 0;
+        战场.Boss归属 = 0;
 
         // 通知战场结束
         通知战场结束(战场);
 
         // 从活跃列表中移除
         活跃战场列表.Remove(战场.战场ID);
+
+        Debug.Log($"战场 {战场.战场ID} 已完全销毁和清理");
+    }
+
+    /// <summary>
+    /// 清理所有活跃战场（用于重置或调试）
+    /// </summary>
+    public void 清理所有战场()
+    {
+        foreach (var 战场 in 活跃战场列表.Values)
+        {
+            战场.战场状态 = 战场状态.已结束;
+            战场.参战玩家列表.Clear();
+        }
+
+        活跃战场列表.Clear();
+        Debug.Log("所有战场已清理");
     }
 
     /// <summary>
