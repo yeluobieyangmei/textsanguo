@@ -22,9 +22,47 @@ public class 王城战战场 : MonoBehaviour
     [Header("战场控制")]
     public Button 退出战场按钮;
 
+    [Header("用于成员列表显示")]
+    public Transform 父对象;
+    public GameObject 要克隆的对象;
+    List<GameObject> 克隆池 = new List<GameObject>();
+    玩家数据 当前选中玩家 = null;
+
     // 私有变量
     private 战场实例 当前连接的战场;
     private 玩家数据 当前玩家;
+    private List<玩家数据> 已加入战场敌方玩家列表 = null;
+
+    public void 刷新玩家对象列表()
+    {
+        要克隆的对象.gameObject.SetActive(false);
+        int count = 已加入战场敌方玩家列表.Count;
+
+        foreach (var obj in 克隆池)//遍历每个被克隆出来的对象
+        {
+            if (obj != null) Destroy(obj);//如果这个对象在unity中还在不是空的 就Destroy(obj)销毁这个对象
+        }
+        克隆池.Clear();
+
+        for (int i = 0; i < count; i++)
+        {
+            GameObject 克隆对象 = Instantiate(要克隆的对象, 父对象);
+            克隆对象.transform.GetChild(0).GetComponent<Text>().text = 已加入战场敌方玩家列表[i].姓名;
+            克隆对象.gameObject.SetActive(true);
+            克隆池.Add(克隆对象);
+
+            // 处理 Toggle 选择逻辑
+            Toggle t = 克隆对象.GetComponent<Toggle>();//获取每个克隆对象上的Toggle组件
+            玩家数据 捕获玩家 = 已加入战场敌方玩家列表[i]; // 闭包捕获
+            t.onValueChanged.AddListener(isOn => //如果这个对象被点击了，就把当前选中玩家赋值为当前选中玩家
+            {
+                if (isOn)
+                {
+                    当前选中玩家 = 捕获玩家;
+                }
+            });
+        }
+    }
 
     private void Start()
     {
@@ -61,6 +99,7 @@ public class 王城战战场 : MonoBehaviour
         {
             Debug.Log("强制刷新战场显示");
             刷新战场显示();
+            刷新玩家对象列表();
         }
     }
 
@@ -107,9 +146,7 @@ public class 王城战战场 : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 连接到指定的战场实例
-    /// </summary>
+    // 在连接战场实例时赋值
     public void 连接战场实例(战场实例 战场)
     {
         当前连接的战场 = 战场;
@@ -120,12 +157,25 @@ public class 王城战战场 : MonoBehaviour
             Debug.Log($"家族1: {战场.家族1?.家族名字}");
             Debug.Log($"家族2: {战场.家族2?.家族名字}");
             Debug.Log($"战场状态: {战场.战场状态}");
+            Debug.Log($"战场总参战玩家数量: {战场.参战玩家列表.Count}");
+
+            // 通过公共方法给私有变量赋值
+            已加入战场敌方玩家列表 = 获取当前敌方玩家列表();
+
+            // 输出所有参战玩家信息
+            Debug.Log("=== 所有参战玩家 ===");
+            for (int i = 0; i < 战场.参战玩家列表.Count; i++)
+            {
+                var 玩家 = 战场.参战玩家列表[i];
+                Debug.Log($"  {i + 1}. {玩家.姓名} (家族: {玩家.家族?.家族名字})");
+            }
 
             刷新战场显示();
         }
         else
         {
             Debug.LogError("尝试连接空的战场实例");
+            已加入战场敌方玩家列表 = null;
         }
     }
 
@@ -163,6 +213,102 @@ public class 王城战战场 : MonoBehaviour
 
         if (家族2积分 != null)
             家族2积分.text = 当前连接的战场.家族2积分.ToString();
+
+        // 新增：输出敌方已加入玩家信息
+        输出敌方玩家信息();
+    }
+
+    /// <summary>
+    /// 输出敌方已加入玩家信息
+    /// </summary>
+    private void 输出敌方玩家信息()
+    {
+        if (当前连接的战场 == null || 当前玩家 == null) return;
+
+        Debug.Log("=== 敌方玩家信息 ===");
+
+        // 确定敌方家族
+        家族信息库 敌方家族 = null;
+        if (当前玩家.家族 == 当前连接的战场.家族1)
+        {
+            敌方家族 = 当前连接的战场.家族2;
+            Debug.Log($"当前玩家属于家族1，敌方家族是：{敌方家族.家族名字}");
+        }
+        else if (当前玩家.家族 == 当前连接的战场.家族2)
+        {
+            敌方家族 = 当前连接的战场.家族1;
+            Debug.Log($"当前玩家属于家族2，敌方家族是：{敌方家族.家族名字}");
+        }
+        else
+        {
+            Debug.LogWarning("当前玩家不属于任何参战家族");
+            return;
+        }
+
+        // 获取敌方已加入战场的玩家对象列表
+        List<玩家数据> 敌方已加入玩家列表 = 获取敌方已加入玩家列表(敌方家族);
+
+        Debug.Log($"敌方家族 {敌方家族.家族名字} 已加入战场的玩家数量：{敌方已加入玩家列表.Count}");
+
+        if (敌方已加入玩家列表.Count > 0)
+        {
+            Debug.Log("敌方已加入玩家详细信息：");
+            for (int i = 0; i < 敌方已加入玩家列表.Count; i++)
+            {
+                var 敌方玩家 = 敌方已加入玩家列表[i];
+                Debug.Log($"  {i + 1}. {敌方玩家.姓名} (等级: {敌方玩家.等级}, 攻击力: {敌方玩家.玩家属性.攻击力})");
+            }
+        }
+        else
+        {
+            Debug.Log("敌方家族暂无玩家加入战场");
+        }
+
+        Debug.Log("=== 敌方玩家信息结束 ===");
+    }
+
+    /// <summary>
+    /// 获取敌方已加入战场的玩家列表
+    /// </summary>
+    private List<玩家数据> 获取敌方已加入玩家列表(家族信息库 敌方家族)
+    {
+        List<玩家数据> 敌方已加入玩家列表 = new List<玩家数据>();
+
+        if (当前连接的战场 == null || 敌方家族 == null) return 敌方已加入玩家列表;
+
+        foreach (var 参战玩家 in 当前连接的战场.参战玩家列表)
+        {
+            if (参战玩家.家族 == 敌方家族)
+            {
+                敌方已加入玩家列表.Add(参战玩家);
+            }
+        }
+
+        return 敌方已加入玩家列表;
+    }
+
+    /// <summary>
+    /// 公共方法：获取当前敌方已加入战场的玩家列表
+    /// </summary>
+    public List<玩家数据> 获取当前敌方玩家列表()
+    {
+        if (当前连接的战场 == null || 当前玩家 == null || 当前玩家.家族 == null)
+        {
+            return new List<玩家数据>();
+        }
+
+        // 确定敌方家族
+        家族信息库 敌方家族 = null;
+        if (当前玩家.家族 == 当前连接的战场.家族1)
+        {
+            敌方家族 = 当前连接的战场.家族2;
+        }
+        else if (当前玩家.家族 == 当前连接的战场.家族2)
+        {
+            敌方家族 = 当前连接的战场.家族1;
+        }
+
+        return 获取敌方已加入玩家列表(敌方家族);
     }
 
     /// <summary>
