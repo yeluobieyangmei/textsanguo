@@ -36,7 +36,8 @@ namespace 玩家数据结构
             this.国家 = null;
             this.玩家属性.生命值 = this.等级 * 200;
             this.玩家属性.当前生命值 = this.玩家属性.生命值;
-            this.玩家属性.攻击力 = this.等级 * 2;
+            //this.玩家属性.攻击力 = this.等级 * 2;
+            this.玩家属性.攻击力 = 100000;
             this.玩家属性.防御力 = this.等级 * 2; ;
             this.称号表.Add(new 称号信息("散人", 1, 0));
             this.称号表.Add(new 称号信息("精英", 2, 0));

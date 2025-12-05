@@ -7,6 +7,7 @@ using 玩家数据结构;
 public class 战场管理器 : MonoBehaviour
 {
     public static 战场管理器 Instance { get; private set; }
+    public 王城战战场 王城战战场;
 
     [Header("战场设置")]
     private float 准备时间 = 10f; // 5分钟倒计时
@@ -145,10 +146,10 @@ public class 战场管理器 : MonoBehaviour
     {
         while (战场.战场状态 == 战场状态.进行中)
         {
-            // Boss攻击逻辑（每3秒）
+            // Boss归属积分结算（每3秒）
             if (Time.time - 战场.上次Boss攻击时间 >= 3f)
             {
-                执行Boss攻击(战场);
+                检测Boss归属并加积分(战场);
                 战场.上次Boss攻击时间 = Time.time;
             }
 
@@ -160,21 +161,21 @@ public class 战场管理器 : MonoBehaviour
     }
 
     /// <summary>
-    /// 执行Boss攻击逻辑
+    /// 检测Boss归属并给归属方加积分
     /// </summary>
-    private void 执行Boss攻击(战场实例 战场)
+    private void 检测Boss归属并加积分(战场实例 战场)
     {
         // Boss归属方获得积分
         if (战场.Boss归属 == 1)
         {
             战场.家族1积分 += 50;
+            Debug.Log($"{战场.家族1.家族名字} +50积分!");
         }
         else if (战场.Boss归属 == 2)
         {
             战场.家族2积分 += 50;
+            Debug.Log($"{战场.家族2.家族名字} +50积分!");
         }
-
-        Debug.Log($"Boss攻击！家族1积分: {战场.家族1积分}, 家族2积分: {战场.家族2积分}");
     }
 
     /// <summary>
@@ -182,11 +183,11 @@ public class 战场管理器 : MonoBehaviour
     /// </summary>
     private void 检查胜利条件(战场实例 战场)
     {
-        if (战场.家族1积分 >= 10000)
+        if (战场.家族1积分 >= 1000) //1万是正常值，临时测试改为1000
         {
             结束战场(战场, 战场.家族1);
         }
-        else if (战场.家族2积分 >= 10000)
+        else if (战场.家族2积分 >= 1000)
         {
             结束战场(战场, 战场.家族2);
         }
@@ -312,5 +313,6 @@ public class 战场管理器 : MonoBehaviour
     private void 通知战场结束(战场实例 战场)
     {
         Debug.Log($"通知: 战场结束，胜利家族: {战场.胜利家族?.家族名字}");
+        王城战战场.gameObject.SetActive(false);
     }
 }

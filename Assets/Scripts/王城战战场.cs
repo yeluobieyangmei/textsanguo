@@ -33,6 +33,16 @@ public class 王城战战场 : MonoBehaviour
     private 玩家数据 当前玩家;
     private List<玩家数据> 已加入战场敌方玩家列表 = null;
 
+    // 性能优化相关
+    private float 上次刷新时间 = 0f;
+    private float 刷新间隔 = 0.5f; // 每0.5秒刷新一次
+    private int 上次敌方玩家数量 = -1; // 用于检测敌方玩家列表变化
+
+    // Boss攻击冷却相关
+    private bool Boss攻击冷却中 = false;
+    private float Boss攻击冷却时间 = 3f; // 3秒冷却
+    private Coroutine Boss攻击冷却协程;
+
     public void 刷新玩家对象列表()
     {
         要克隆的对象.gameObject.SetActive(false);
@@ -59,9 +69,14 @@ public class 王城战战场 : MonoBehaviour
                 if (isOn)
                 {
                     当前选中玩家 = 捕获玩家;
+                    Debug.Log($"选中敌方玩家: {当前选中玩家.姓名}");
                 }
             });
         }
+
+        // 更新敌方玩家数量记录
+        上次敌方玩家数量 = count;
+        Debug.Log($"刷新玩家列表完成，当前敌方玩家数量: {count}");
     }
 
     private void Start()
@@ -112,10 +127,11 @@ public class 王城战战场 : MonoBehaviour
 
     private void Update()
     {
-        // 实时刷新战场数据
-        if (当前连接的战场 != null)
+        // 性能优化：限制刷新频率
+        if (当前连接的战场 != null && Time.time - 上次刷新时间 > 刷新间隔)
         {
             刷新战场显示();
+            上次刷新时间 = Time.time;
         }
     }
 
@@ -214,8 +230,135 @@ public class 王城战战场 : MonoBehaviour
         if (家族2积分 != null)
             家族2积分.text = 当前连接的战场.家族2积分.ToString();
 
-        // 新增：输出敌方已加入玩家信息
-        输出敌方玩家信息();
+        // 检查敌方玩家列表是否有变化，只有变化时才刷新UI
+        检查并更新敌方玩家列表();
+
+        // 更新Boss攻击按钮状态（Boss归属变化时按钮状态也要更新）
+        更新Boss攻击按钮状态();
+    }
+
+    /// <summary>
+    /// 检查并更新敌方玩家列表
+    /// </summary>
+    private void 检查并更新敌方玩家列表()
+    {
+        // 获取最新的敌方玩家列表
+        List<玩家数据> 最新敌方玩家列表 = 获取当前敌方玩家列表();
+
+        // 检查数量是否有变化
+        if (最新敌方玩家列表.Count != 上次敌方玩家数量)
+        {
+            Debug.Log($"敌方玩家数量发生变化: {上次敌方玩家数量} -> {最新敌方玩家列表.Count}");
+            已加入战场敌方玩家列表 = 最新敌方玩家列表;
+            刷新玩家对象列表();
+        }
+        else
+        {
+            // 数量相同，检查成员是否有变化（可选，根据需要决定是否实现）
+            bool 成员有变化 = false;
+            if (已加入战场敌方玩家列表 != null)
+            {
+                for (int i = 0; i < 最新敌方玩家列表.Count; i++)
+                {
+                    if (i >= 已加入战场敌方玩家列表.Count ||
+                        已加入战场敌方玩家列表[i].ID != 最新敌方玩家列表[i].ID)
+                    {
+                        成员有变化 = true;
+                        break;
+                    }
+                }
+            }
+
+            if (成员有变化)
+            {
+                Debug.Log("敌方玩家成员发生变化");
+                已加入战场敌方玩家列表 = 最新敌方玩家列表;
+                刷新玩家对象列表();
+            }
+        }
+    }
+
+    /// <summary>
+    /// 更新Boss攻击按钮状态
+    /// </summary>
+    private void 更新Boss攻击按钮状态()
+    {
+        if (攻击Boss按钮 != null && 当前连接的战场 != null && 当前玩家 != null)
+        {
+            bool 可以攻击Boss = 判断是否可以攻击Boss();
+
+            // 设置按钮是否可点击
+            攻击Boss按钮.interactable = !Boss攻击冷却中 && 可以攻击Boss;
+
+            // 更新按钮文字显示状态
+            Text 按钮文字 = 攻击Boss按钮.GetComponentInChildren<Text>();
+            if (按钮文字 != null)
+            {
+                if (Boss攻击冷却中)
+                {
+                    按钮文字.text = "冷却中...";
+                }
+                else if (!可以攻击Boss)
+                {
+                    按钮文字.text = "己方Boss";
+                }
+                else
+                {
+                    按钮文字.text = "攻击";
+                }
+            }
+
+            // 设置按钮颜色
+            Image 按钮图片 = 攻击Boss按钮.GetComponent<Image>();
+            if (按钮图片 != null)
+            {
+                if (!可以攻击Boss)
+                {
+                    // Boss属于己方时，按钮显示灰色
+                    按钮图片.color = new Color(0.5f, 0.5f, 0.5f, 1f);
+                }
+                else if (Boss攻击冷却中)
+                {
+                    // 冷却中显示暗红色
+                    按钮图片.color = new Color(0.6f, 0.3f, 0.3f, 1f);
+                }
+                else
+                {
+                    // 可以攻击时显示正常红色
+                    按钮图片.color = new Color(0.8f, 0.2f, 0.2f, 1f);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// 判断当前玩家是否可以攻击Boss
+    /// </summary>
+    private bool 判断是否可以攻击Boss()
+    {
+        if (当前连接的战场 == null || 当前玩家 == null || 当前玩家.家族 == null)
+            return false;
+
+        // Boss无归属时，任何人都可以攻击
+        if (当前连接的战场.Boss归属 == 0)
+        {
+            return true;
+        }
+
+        // 判断Boss是否属于当前玩家的家族
+        bool Boss属于己方 = false;
+
+        if (当前玩家.家族 == 当前连接的战场.家族1 && 当前连接的战场.Boss归属 == 1)
+        {
+            Boss属于己方 = true;
+        }
+        else if (当前玩家.家族 == 当前连接的战场.家族2 && 当前连接的战场.Boss归属 == 2)
+        {
+            Boss属于己方 = true;
+        }
+
+        // Boss属于己方时不能攻击，属于敌方或无归属时可以攻击
+        return !Boss属于己方;
     }
 
     /// <summary>
@@ -316,6 +459,12 @@ public class 王城战战场 : MonoBehaviour
     /// </summary>
     public void 点击攻击Boss()
     {
+        if (Boss攻击冷却中)
+        {
+            通用提示框.显示("Boss攻击冷却中，请稍后再试！");
+            return;
+        }
+
         if (当前连接的战场 == null)
         {
             通用提示框.显示("未连接到战场！");
@@ -335,6 +484,20 @@ public class 王城战战场 : MonoBehaviour
             return;
         }
 
+        // 检查是否可以攻击Boss
+        if (!判断是否可以攻击Boss())
+        {
+            if (当前连接的战场.Boss归属 == 0)
+            {
+                通用提示框.显示("Boss暂无归属，无法攻击！");
+            }
+            else
+            {
+                通用提示框.显示("Boss已属于你的家族，无法攻击！");
+            }
+            return;
+        }
+
         // 计算攻击伤害（可以根据玩家属性计算）
         int 攻击伤害 = 当前玩家.玩家属性.攻击力 * Random.Range(80, 121) / 100; // 80%-120%的攻击力
 
@@ -347,6 +510,39 @@ public class 王城战战场 : MonoBehaviour
         {
             通用提示框.显示("Boss被击败！你的家族获得了Boss归属权！");
         }
+
+        // 开始Boss攻击冷却
+        开始Boss攻击冷却();
+    }
+
+    /// <summary>
+    /// 开始Boss攻击冷却
+    /// </summary>
+    private void 开始Boss攻击冷却()
+    {
+        if (Boss攻击冷却协程 != null)
+        {
+            StopCoroutine(Boss攻击冷却协程);
+        }
+
+        Boss攻击冷却协程 = StartCoroutine(Boss攻击冷却倒计时());
+    }
+
+    /// <summary>
+    /// Boss攻击冷却倒计时协程
+    /// </summary>
+    private IEnumerator Boss攻击冷却倒计时()
+    {
+        Boss攻击冷却中 = true;
+        Debug.Log($"Boss攻击进入冷却，{Boss攻击冷却时间}秒后可再次攻击");
+
+        yield return new WaitForSeconds(Boss攻击冷却时间);
+
+        Boss攻击冷却中 = false;
+        Debug.Log("Boss攻击冷却结束，可以再次攻击");
+
+        // 立即更新按钮状态
+        更新Boss攻击按钮状态();
     }
 
     /// <summary>
@@ -362,6 +558,14 @@ public class 王城战战场 : MonoBehaviour
 
             // 清理UI
             当前连接的战场 = null;
+
+            // 停止Boss攻击冷却协程
+            if (Boss攻击冷却协程 != null)
+            {
+                StopCoroutine(Boss攻击冷却协程);
+                Boss攻击冷却协程 = null;
+            }
+            Boss攻击冷却中 = false;
 
             // 关闭界面
             gameObject.SetActive(false);
