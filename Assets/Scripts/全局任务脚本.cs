@@ -2,12 +2,27 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using 玩家数据结构;
+using 国家系统;
 using 怪物数据结构;
 
 public class 全局任务脚本 : MonoBehaviour
 {
     void Start()
     {
+        玩家数据 玩家 = 全局变量.所有玩家数据表[1];
+        国家信息库 玩家国家 = 玩家.国家;
+        家族信息库 家族信息库 = new 家族信息库();
+        家族信息库.创建一个家族("AI家族", 玩家);
+        玩家国家.家族成员表.Add(家族信息库);
+        全局变量.所有家族列表.Add(家族信息库);
+        玩家.家族 = 家族信息库;
+        for (int i = 2; i < 6; i++)
+        {
+            家族信息库.家族成员.Add(全局变量.所有玩家数据表[i]);
+            全局变量.所有玩家数据表[i].家族 = 家族信息库;
+        }
+        玩家国家.宣战家族1 = 家族信息库;
+        Debug.Log("已启用测试方法");
         /*
         Debug.Log("开始执行全局任务脚本");
         // 生成怪物

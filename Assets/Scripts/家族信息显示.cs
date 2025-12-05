@@ -23,13 +23,11 @@ public class 家族信息显示 : MonoBehaviour
         {
             无家族界面.gameObject.SetActive(true);
             信息显示界面.gameObject.SetActive(false);
-            Debug.Log($"当前无家族：{当前玩家.家族}");
         }
         else
         {
             无家族界面.gameObject.SetActive(false);
             信息显示界面.gameObject.SetActive(true);
-            Debug.Log($"当前有家族：{当前玩家.家族}");
             信息显示界面.transform.GetChild(0).GetComponent<Text>().text = $"家族名称：{当前玩家.家族.家族名字}";
             信息显示界面.transform.GetChild(1).GetComponent<Text>().text = $"家族族长：{全局变量.所有玩家数据表[当前玩家.家族.族长ID].姓名}";
             信息显示界面.transform.GetChild(2).GetComponent<Text>().text = 当前玩家.ID == 当前玩家.家族.族长ID ? "我的职位：族长" : "我的职位族员";
