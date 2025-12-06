@@ -6,6 +6,17 @@ using 国家系统;
 
 namespace 玩家数据结构
 {
+    public enum 官职枚举
+    {
+        国王,
+        大都督,
+        丞相,
+        太尉,
+        御史大夫,
+        金吾卫,
+        镖师,
+        国民
+    }
     public class 玩家数据
     {
         public int ID;
@@ -18,7 +29,7 @@ namespace 玩家数据结构
         public List<称号信息> 称号表 = new List<称号信息>();
         public 国家信息库 国家;
         public 家族信息库 家族;
-        public string 官职 = "国民";
+        public 官职枚举 官职 { get; set; }
         public 玩家数据(string 姓名)
         {
             初始化一个玩家(姓名);
@@ -32,7 +43,7 @@ namespace 玩家数据结构
             this.黄金 = 2000000;
             this.姓名 = 姓名;
             this.称号名 = "无";
-            this.官职 = "国民";
+            this.官职 = 官职枚举.国民;
             this.国家 = null;
             this.玩家属性.生命值 = this.等级 * 200;
             this.玩家属性.当前生命值 = this.玩家属性.生命值;

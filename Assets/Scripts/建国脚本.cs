@@ -117,7 +117,7 @@ public class 建国脚本 : MonoBehaviour
         当前玩家.国家 = 国家信息库;
         国家信息库.国王ID = 当前玩家.ID;
 
-        当前玩家.官职 = "国王";
+        当前玩家.官职 = 官职枚举.国王;
         国家功能显示.刷新显示();
         this.gameObject.SetActive(false);
     }
