@@ -13,6 +13,12 @@ public class 战场管理器 : MonoBehaviour
     [Header("战场设置")]
     private float 准备时间 = 10f; // 5分钟倒计时
 
+    // 战场类型固定ID
+    private const int 王城战战场ID = 1;
+    private const int 攻城战战场ID = 2;
+    private const int 家族战战场ID = 3;
+    // 可以继续添加其他战场类型...
+
     private Dictionary<int, 战场实例> 活跃战场列表 = new Dictionary<int, 战场实例>();
     private int 战场ID计数器 = 0;
 
@@ -38,10 +44,18 @@ public class 战场管理器 : MonoBehaviour
     {
         Debug.Log($"启动王城战: {家族1.家族名字} VS {家族2.家族名字}");
 
-        // 创建新的战场实例
+        // 清理可能存在的王城战战场
+        if (活跃战场列表.ContainsKey(王城战战场ID))
+        {
+            Debug.Log("检测到已存在的王城战战场，正在清理...");
+            结束战场(活跃战场列表[王城战战场ID], null);
+        }
+
+        // 创建新的王城战战场实例
         战场实例 新战场 = new 战场实例()
         {
-            战场ID = ++战场ID计数器,
+            战场ID = 王城战战场ID,
+            战场类型 = "王城战",
             所属国家 = 国家,
             家族1 = 家族1,
             家族2 = 家族2,
@@ -56,6 +70,8 @@ public class 战场管理器 : MonoBehaviour
 
         // 通知所有相关玩家战场即将开始
         通知战场准备(新战场);
+
+        Debug.Log($"王城战战场创建成功，ID: {新战场.战场ID}，{新战场.剩余准备时间}秒后开始");
     }
 
     /// <summary>

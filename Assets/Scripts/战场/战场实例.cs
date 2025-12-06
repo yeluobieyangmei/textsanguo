@@ -13,6 +13,7 @@ public enum 战场状态
 public class 战场实例
 {
     public int 战场ID { get; set; }
+    public string 战场类型 { get; set; }
     public 国家信息库 所属国家 { get; set; }
     public 家族信息库 家族1 { get; set; }
     public 家族信息库 家族2 { get; set; }
@@ -79,7 +80,6 @@ public class 战场实例
         Boss血量 -= 伤害;
         if (Boss血量 <= 0)
         {
-            Boss血量 = 0;
             // Boss归属给击杀者的家族
             if (攻击者.家族 == 家族1)
             {
@@ -90,7 +90,10 @@ public class 战场实例
                 Boss归属 = 2;
             }
 
-            Debug.Log($"Boss被 {攻击者.姓名} 击败！归属: {(Boss归属 == 1 ? 家族1.家族名字 : 家族2.家族名字)}");
+            // 恢复Boss血量到最大值
+            Boss血量 = Boss最大血量;
+
+            Debug.Log($"Boss被 {攻击者.姓名} 击败！归属: {(Boss归属 == 1 ? 家族1.家族名字 : 家族2.家族名字)}，Boss血量已恢复");
             return true;
         }
 
