@@ -408,10 +408,23 @@ public class 王城战战场 : MonoBehaviour
             宣布战场结果(当前连接的战场.家族2, "率先达到胜利积分");
     }
 
+    /// <summary>
+    /// 更新倒计时显示（从战场实例中读取数据）
+    /// </summary>
     private void 更新倒计时显示()
     {
-        if (战场倒计时显示 == null || !倒计时进行中) return;
+        if (战场倒计时显示 == null || 当前连接的战场 == null) return;
+        
+        // 从战场实例中读取倒计时数据
+        if (!当前连接的战场.倒计时进行中)
+        {
+            战场倒计时显示.text = "战场未开始";
+            return;
+        }
 
+        float 当前剩余时间 = 当前连接的战场.当前剩余时间;
+        bool 是否加时阶段 = 当前连接的战场.是否加时阶段;
+        
         int 分钟 = Mathf.FloorToInt(当前剩余时间 / 60);
         int 秒数 = Mathf.FloorToInt(当前剩余时间 % 60);
         string 倒计时文本 = $"{分钟:D2}:{秒数:D2}";
@@ -419,15 +432,27 @@ public class 王城战战场 : MonoBehaviour
         if (是否加时阶段)
         {
             倒计时文本 = $"加时 {倒计时文本}";
-            战场倒计时显示.color = Color.red;
+            战场倒计时显示.color = Color.red; // 加时阶段显示红色
         }
         else
         {
             倒计时文本 = $"剩余 {倒计时文本}";
-            if (当前剩余时间 <= 300) 战场倒计时显示.color = Color.red;
-            else if (当前剩余时间 <= 600) 战场倒计时显示.color = Color.yellow;
-            else 战场倒计时显示.color = Color.white;
+            
+            // 根据剩余时间改变颜色
+            if (当前剩余时间 <= 300) // 最后5分钟
+            {
+                战场倒计时显示.color = Color.red;
+            }
+            else if (当前剩余时间 <= 600) // 最后10分钟
+            {
+                战场倒计时显示.color = Color.yellow;
+            }
+            else
+            {
+                战场倒计时显示.color = Color.white;
+            }
         }
+
         战场倒计时显示.text = 倒计时文本;
     }
 
