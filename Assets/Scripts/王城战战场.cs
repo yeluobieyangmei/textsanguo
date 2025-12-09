@@ -21,6 +21,7 @@ public class 王城战战场 : MonoBehaviour
 
     [Header("战场控制")]
     public Button 退出战场按钮;
+    public Text 战场倒计时显示;
 
     [Header("用于成员列表显示")]
     public Transform 父对象;
@@ -28,29 +29,34 @@ public class 王城战战场 : MonoBehaviour
     List<GameObject> 克隆池 = new List<GameObject>();
     玩家数据 当前选中玩家 = null;
 
-    // 私有变量
     private 战场实例 当前连接的战场;
     private 玩家数据 当前玩家;
     private List<玩家数据> 已加入战场敌方玩家列表 = null;
 
-    // 性能优化相关
     private float 上次刷新时间 = 0f;
-    private float 刷新间隔 = 0.5f; // 每0.5秒刷新一次
-    private int 上次敌方玩家数量 = -1; // 用于检测敌方玩家列表变化
+    private float 刷新间隔 = 0.5f;
+    private int 上次敌方玩家数量 = -1;
 
-    // Boss攻击冷却相关
     private bool Boss攻击冷却中 = false;
-    private float Boss攻击冷却时间 = 3f; // 3秒冷却
+    private float Boss攻击冷却时间 = 3f;
     private Coroutine Boss攻击冷却协程;
+
+    //private float 战场总时长 = 1800f;
+    private float 战场总时长 = 60f;
+    private float 加时时长 = 300f;
+    private float 当前剩余时间 = 0f;
+    private bool 倒计时进行中 = false;
+    private bool 是否加时阶段 = false;
+    private Coroutine 倒计时协程;
 
     public void 刷新玩家对象列表()
     {
         要克隆的对象.gameObject.SetActive(false);
         int count = 已加入战场敌方玩家列表.Count;
 
-        foreach (var obj in 克隆池)//遍历每个被克隆出来的对象
+        foreach (var obj in 克隆池)
         {
-            if (obj != null) Destroy(obj);//如果这个对象在unity中还在不是空的 就Destroy(obj)销毁这个对象
+            if (obj != null) Destroy(obj);
         }
         克隆池.Clear();
 
@@ -61,10 +67,9 @@ public class 王城战战场 : MonoBehaviour
             克隆对象.gameObject.SetActive(true);
             克隆池.Add(克隆对象);
 
-            // 处理 Toggle 选择逻辑
-            Toggle t = 克隆对象.GetComponent<Toggle>();//获取每个克隆对象上的Toggle组件
-            玩家数据 捕获玩家 = 已加入战场敌方玩家列表[i]; // 闭包捕获
-            t.onValueChanged.AddListener(isOn => //如果这个对象被点击了，就把当前选中玩家赋值为当前选中玩家
+            Toggle t = 克隆对象.GetComponent<Toggle>();
+            玩家数据 捕获玩家 = 已加入战场敌方玩家列表[i];
+            t.onValueChanged.AddListener(isOn =>
             {
                 if (isOn)
                 {
@@ -73,41 +78,21 @@ public class 王城战战场 : MonoBehaviour
                 }
             });
 
-            // 新增：为每个玩家对象添加攻击按钮功能
             Button 攻击按钮 = 克隆对象.GetComponentInChildren<Button>();
             if (攻击按钮 != null)
             {
-                // 使用闭包捕获当前玩家，确保每个按钮都绑定正确的玩家
                 玩家数据 按钮捕获玩家 = 已加入战场敌方玩家列表[i];
                 攻击按钮.onClick.AddListener(() => 攻击指定玩家(按钮捕获玩家));
-                Debug.Log($"为玩家 {按钮捕获玩家.姓名} 绑定攻击按钮");
-            }
-            else
-            {
-                Debug.LogWarning($"克隆对象中未找到Button组件，请检查预制体设置");
             }
         }
 
-        // 更新敌方玩家数量记录
         上次敌方玩家数量 = count;
-        Debug.Log($"刷新玩家列表完成，当前敌方玩家数量: {count}");
     }
 
     private void Start()
     {
-        Debug.Log("------------------------开始获取当前玩家");
         当前玩家 = 全局变量.所有玩家数据表[全局变量.当前身份];
-        Debug.Log($"------------------------当前玩家是:{当前玩家.姓名}");
 
-        // 检查UI组件是否正确分配
-        Debug.Log($"Boss血量组件: {Boss血量 != null}");
-        Debug.Log($"Boss归属组件: {Boss归属 != null}");
-        Debug.Log($"家族1名字组件: {家族1名字 != null}");
-        Debug.Log($"家族2名字组件: {家族2名字 != null}");
-        Debug.Log($"家族1积分组件: {家族1积分 != null}");
-        Debug.Log($"家族2积分组件: {家族2积分 != null}");
-
-        // 绑定按钮事件
         if (攻击Boss按钮 != null)
             攻击Boss按钮.onClick.AddListener(点击攻击Boss);
 
@@ -117,50 +102,35 @@ public class 王城战战场 : MonoBehaviour
 
     private IEnumerator 延迟自动连接()
     {
-        // 等待一帧，确保Start方法执行完毕
         yield return null;
-
-        // 现在执行自动连接
         自动连接玩家战场();
 
-        // 如果已经连接到战场，强制刷新一次
         if (当前连接的战场 != null)
         {
-            Debug.Log("强制刷新战场显示");
             刷新战场显示();
             刷新玩家对象列表();
+            启动战场倒计时();
         }
     }
 
     private void OnEnable()
     {
-        Debug.Log("王城战战场UI被激活");
-        // 延迟执行，确保Start方法先执行
         StartCoroutine(延迟自动连接());
     }
 
     private void Update()
     {
-        // 性能优化：限制刷新频率
         if (当前连接的战场 != null && Time.time - 上次刷新时间 > 刷新间隔)
         {
             刷新战场显示();
             上次刷新时间 = Time.time;
         }
+        更新倒计时显示();
     }
 
-    /// <summary>
-    /// 自动连接到当前玩家参与的战场
-    /// </summary>
     private void 自动连接玩家战场()
     {
-        Debug.Log($"------------------------自动连接玩家战场里当前玩家是:{当前玩家.姓名}");
-
-        if (当前玩家 == null || 当前玩家.家族 == null)
-        {
-            Debug.LogWarning("当前玩家没有家族，无法连接战场");
-            return;
-        }
+        if (当前玩家 == null || 当前玩家.家族 == null) return;
 
         if (战场管理器.Instance != null)
         {
@@ -169,54 +139,23 @@ public class 王城战战场 : MonoBehaviour
             {
                 连接战场实例(玩家战场);
             }
-            else
-            {
-                Debug.Log("未找到可连接的战场或战场未开始");
-            }
         }
     }
 
-    // 在连接战场实例时赋值
     public void 连接战场实例(战场实例 战场)
     {
         当前连接的战场 = 战场;
-
         if (战场 != null)
         {
-            Debug.Log($"UI成功连接到战场 {战场.战场ID}");
-            Debug.Log($"家族1: {战场.家族1?.家族名字}");
-            Debug.Log($"家族2: {战场.家族2?.家族名字}");
-            Debug.Log($"战场状态: {战场.战场状态}");
-            Debug.Log($"战场总参战玩家数量: {战场.参战玩家列表.Count}");
-
-            // 通过公共方法给私有变量赋值
             已加入战场敌方玩家列表 = 获取当前敌方玩家列表();
-
-            // 输出所有参战玩家信息
-            Debug.Log("=== 所有参战玩家 ===");
-            for (int i = 0; i < 战场.参战玩家列表.Count; i++)
-            {
-                var 玩家 = 战场.参战玩家列表[i];
-                Debug.Log($"  {i + 1}. {玩家.姓名} (家族: {玩家.家族?.家族名字})");
-            }
-
             刷新战场显示();
-        }
-        else
-        {
-            Debug.LogError("尝试连接空的战场实例");
-            已加入战场敌方玩家列表 = null;
         }
     }
 
-    /// <summary>
-    /// 刷新战场基本信息显示
-    /// </summary>
     private void 刷新战场显示()
     {
         if (当前连接的战场 == null) return;
 
-        // 更新Boss信息
         if (Boss血量 != null)
             Boss血量.text = $"Boss当前血量：{当前连接的战场.Boss血量}";
 
@@ -227,452 +166,278 @@ public class 王城战战场 : MonoBehaviour
                 归属文本 = 当前连接的战场.家族1.家族名字;
             else if (当前连接的战场.Boss归属 == 2)
                 归属文本 = 当前连接的战场.家族2.家族名字;
-
             Boss归属.text = $"归属：{归属文本}";
         }
 
-        // 更新家族信息
         if (家族1名字 != null)
             家族1名字.text = 当前连接的战场.家族1.家族名字;
-
         if (家族2名字 != null)
             家族2名字.text = 当前连接的战场.家族2.家族名字;
-
         if (家族1积分 != null)
             家族1积分.text = 当前连接的战场.家族1积分.ToString();
-
         if (家族2积分 != null)
             家族2积分.text = 当前连接的战场.家族2积分.ToString();
 
-        // 检查敌方玩家列表是否有变化，只有变化时才刷新UI
+        检查胜利条件();
         检查并更新敌方玩家列表();
-
-        // 更新Boss攻击按钮状态（Boss归属变化时按钮状态也要更新）
         更新Boss攻击按钮状态();
     }
 
-    /// <summary>
-    /// 检查并更新敌方玩家列表
-    /// </summary>
     private void 检查并更新敌方玩家列表()
     {
-        // 获取最新的敌方玩家列表
         List<玩家数据> 最新敌方玩家列表 = 获取当前敌方玩家列表();
-
-        // 检查数量是否有变化
         if (最新敌方玩家列表.Count != 上次敌方玩家数量)
         {
-            Debug.Log($"敌方玩家数量发生变化: {上次敌方玩家数量} -> {最新敌方玩家列表.Count}");
             已加入战场敌方玩家列表 = 最新敌方玩家列表;
             刷新玩家对象列表();
         }
-        else
-        {
-            // 数量相同，检查成员是否有变化（可选，根据需要决定是否实现）
-            bool 成员有变化 = false;
-            if (已加入战场敌方玩家列表 != null)
-            {
-                for (int i = 0; i < 最新敌方玩家列表.Count; i++)
-                {
-                    if (i >= 已加入战场敌方玩家列表.Count ||
-                        已加入战场敌方玩家列表[i].ID != 最新敌方玩家列表[i].ID)
-                    {
-                        成员有变化 = true;
-                        break;
-                    }
-                }
-            }
-
-            if (成员有变化)
-            {
-                Debug.Log("敌方玩家成员发生变化");
-                已加入战场敌方玩家列表 = 最新敌方玩家列表;
-                刷新玩家对象列表();
-            }
-        }
     }
 
-    /// <summary>
-    /// 更新Boss攻击按钮状态
-    /// </summary>
     private void 更新Boss攻击按钮状态()
     {
         if (攻击Boss按钮 != null && 当前连接的战场 != null && 当前玩家 != null)
         {
             bool 可以攻击Boss = 判断是否可以攻击Boss();
-
-            // 设置按钮是否可点击
             攻击Boss按钮.interactable = !Boss攻击冷却中 && 可以攻击Boss;
-
-            // 更新按钮文字显示状态
-            Text 按钮文字 = 攻击Boss按钮.GetComponentInChildren<Text>();
-            if (按钮文字 != null)
-            {
-                if (Boss攻击冷却中)
-                {
-                    按钮文字.text = "冷却中...";
-                }
-                else if (!可以攻击Boss)
-                {
-                    按钮文字.text = "己方Boss";
-                }
-                else
-                {
-                    按钮文字.text = "攻击";
-                }
-            }
-
-            // 设置按钮颜色
-            Image 按钮图片 = 攻击Boss按钮.GetComponent<Image>();
-            if (按钮图片 != null)
-            {
-                if (!可以攻击Boss)
-                {
-                    // Boss属于己方时，按钮显示灰色
-                    按钮图片.color = new Color(0.5f, 0.5f, 0.5f, 1f);
-                }
-                else if (Boss攻击冷却中)
-                {
-                    // 冷却中显示暗红色
-                    按钮图片.color = new Color(0.6f, 0.3f, 0.3f, 1f);
-                }
-                else
-                {
-                    // 可以攻击时显示正常红色
-                    按钮图片.color = new Color(0.8f, 0.2f, 0.2f, 1f);
-                }
-            }
         }
     }
 
-    /// <summary>
-    /// 判断当前玩家是否可以攻击Boss
-    /// </summary>
     private bool 判断是否可以攻击Boss()
     {
         if (当前连接的战场 == null || 当前玩家 == null || 当前玩家.家族 == null)
             return false;
 
-        // Boss无归属时，任何人都可以攻击
-        if (当前连接的战场.Boss归属 == 0)
-        {
-            return true;
-        }
+        if (当前连接的战场.Boss归属 == 0) return true;
 
-        // 判断Boss是否属于当前玩家的家族
         bool Boss属于己方 = false;
-
         if (当前玩家.家族 == 当前连接的战场.家族1 && 当前连接的战场.Boss归属 == 1)
-        {
             Boss属于己方 = true;
-        }
         else if (当前玩家.家族 == 当前连接的战场.家族2 && 当前连接的战场.Boss归属 == 2)
-        {
             Boss属于己方 = true;
-        }
 
-        // Boss属于己方时不能攻击，属于敌方或无归属时可以攻击
         return !Boss属于己方;
     }
 
-    /// <summary>
-    /// 输出敌方已加入玩家信息
-    /// </summary>
-    private void 输出敌方玩家信息()
-    {
-        if (当前连接的战场 == null || 当前玩家 == null) return;
-
-        Debug.Log("=== 敌方玩家信息 ===");
-
-        // 确定敌方家族
-        家族信息库 敌方家族 = null;
-        if (当前玩家.家族 == 当前连接的战场.家族1)
-        {
-            敌方家族 = 当前连接的战场.家族2;
-            Debug.Log($"当前玩家属于家族1，敌方家族是：{敌方家族.家族名字}");
-        }
-        else if (当前玩家.家族 == 当前连接的战场.家族2)
-        {
-            敌方家族 = 当前连接的战场.家族1;
-            Debug.Log($"当前玩家属于家族2，敌方家族是：{敌方家族.家族名字}");
-        }
-        else
-        {
-            Debug.LogWarning("当前玩家不属于任何参战家族");
-            return;
-        }
-
-        // 获取敌方已加入战场的玩家对象列表
-        List<玩家数据> 敌方已加入玩家列表 = 获取敌方已加入玩家列表(敌方家族);
-
-        Debug.Log($"敌方家族 {敌方家族.家族名字} 已加入战场的玩家数量：{敌方已加入玩家列表.Count}");
-
-        if (敌方已加入玩家列表.Count > 0)
-        {
-            Debug.Log("敌方已加入玩家详细信息：");
-            for (int i = 0; i < 敌方已加入玩家列表.Count; i++)
-            {
-                var 敌方玩家 = 敌方已加入玩家列表[i];
-                Debug.Log($"  {i + 1}. {敌方玩家.姓名} (等级: {敌方玩家.等级}, 攻击力: {敌方玩家.玩家属性.攻击力})");
-            }
-        }
-        else
-        {
-            Debug.Log("敌方家族暂无玩家加入战场");
-        }
-
-        Debug.Log("=== 敌方玩家信息结束 ===");
-    }
-
-    /// <summary>
-    /// 获取敌方已加入战场的玩家列表（过滤死亡玩家）
-    /// </summary>
-    private List<玩家数据> 获取敌方已加入玩家列表(家族信息库 敌方家族)
-    {
-        List<玩家数据> 敌方已加入玩家列表 = new List<玩家数据>();
-
-        if (当前连接的战场 == null || 敌方家族 == null) return 敌方已加入玩家列表;
-
-        foreach (var 参战玩家 in 当前连接的战场.参战玩家列表)
-        {
-            // 只显示敌方家族且未死亡的玩家
-            if (参战玩家.家族 == 敌方家族 && 参战玩家.玩家属性.当前生命值 > 0)
-            {
-                敌方已加入玩家列表.Add(参战玩家);
-            }
-        }
-
-        return 敌方已加入玩家列表;
-    }
-
-    /// <summary>
-    /// 公共方法：获取当前敌方已加入战场的玩家列表
-    /// </summary>
     public List<玩家数据> 获取当前敌方玩家列表()
     {
         if (当前连接的战场 == null || 当前玩家 == null || 当前玩家.家族 == null)
-        {
             return new List<玩家数据>();
-        }
 
-        // 确定敌方家族
         家族信息库 敌方家族 = null;
         if (当前玩家.家族 == 当前连接的战场.家族1)
-        {
             敌方家族 = 当前连接的战场.家族2;
-        }
         else if (当前玩家.家族 == 当前连接的战场.家族2)
-        {
             敌方家族 = 当前连接的战场.家族1;
-        }
 
-        return 获取敌方已加入玩家列表(敌方家族);
+        List<玩家数据> 敌方已加入玩家列表 = new List<玩家数据>();
+        if (当前连接的战场 != null && 敌方家族 != null)
+        {
+            foreach (var 参战玩家 in 当前连接的战场.参战玩家列表)
+            {
+                if (参战玩家.家族 == 敌方家族 && 参战玩家.玩家属性.当前生命值 > 0)
+                {
+                    敌方已加入玩家列表.Add(参战玩家);
+                }
+            }
+        }
+        return 敌方已加入玩家列表;
     }
 
-    /// <summary>
-    /// 点击攻击Boss
-    /// </summary>
     public void 点击攻击Boss()
     {
-        if (Boss攻击冷却中)
-        {
-            通用提示框.显示("Boss攻击冷却中，请稍后再试！");
-            return;
-        }
+        if (Boss攻击冷却中 || 当前连接的战场 == null) return;
 
-        if (当前连接的战场 == null)
-        {
-            通用提示框.显示("未连接到战场！");
-            return;
-        }
-
-        if (当前连接的战场.战场状态 != 战场状态.进行中)
-        {
-            通用提示框.显示("战场未开始！");
-            return;
-        }
-
-        // 检查玩家是否在战场中
-        if (!当前连接的战场.参战玩家列表.Contains(当前玩家))
-        {
-            通用提示框.显示("你还没有进入战场！");
-            return;
-        }
-
-        // 检查是否可以攻击Boss
-        if (!判断是否可以攻击Boss())
-        {
-            if (当前连接的战场.Boss归属 == 0)
-            {
-                通用提示框.显示("Boss暂无归属，无法攻击！");
-            }
-            else
-            {
-                通用提示框.显示("Boss已属于你的家族，无法攻击！");
-            }
-            return;
-        }
-
-        // 计算攻击伤害（可以根据玩家属性计算）
-        int 攻击伤害 = 当前玩家.玩家属性.攻击力 * Random.Range(80, 121) / 100; // 80%-120%的攻击力
-
-        // 攻击Boss
+        int 攻击伤害 = 当前玩家.玩家属性.攻击力 * Random.Range(80, 121) / 100;
         bool Boss被击败 = 当前连接的战场.攻击Boss(当前玩家, 攻击伤害);
 
         通用提示框.显示($"对Boss造成 {攻击伤害} 点伤害！");
+        if (Boss被击败) 通用提示框.显示("Boss被击败！你的家族获得了Boss归属权！");
 
-        if (Boss被击败)
-        {
-            通用提示框.显示("Boss被击败！你的家族获得了Boss归属权！");
-        }
-
-        // 开始Boss攻击冷却
-        开始Boss攻击冷却();
+        StartCoroutine(Boss攻击冷却倒计时());
     }
 
-    /// <summary>
-    /// 开始Boss攻击冷却
-    /// </summary>
-    private void 开始Boss攻击冷却()
-    {
-        if (Boss攻击冷却协程 != null)
-        {
-            StopCoroutine(Boss攻击冷却协程);
-        }
-
-        Boss攻击冷却协程 = StartCoroutine(Boss攻击冷却倒计时());
-    }
-
-    /// <summary>
-    /// Boss攻击冷却倒计时协程
-    /// </summary>
     private IEnumerator Boss攻击冷却倒计时()
     {
         Boss攻击冷却中 = true;
-        Debug.Log($"Boss攻击进入冷却，{Boss攻击冷却时间}秒后可再次攻击");
-
         yield return new WaitForSeconds(Boss攻击冷却时间);
-
         Boss攻击冷却中 = false;
-        Debug.Log("Boss攻击冷却结束，可以再次攻击");
-
-        // 立即更新按钮状态
         更新Boss攻击按钮状态();
     }
 
-    /// <summary>
-    /// 点击退出战场
-    /// </summary>
     public void 点击退出战场()
     {
-        if (当前连接的战场 == null || 战场管理器.Instance == null) return;
+        if (当前连接的战场 == null) return;
 
         if (战场管理器.Instance.玩家退出战场(当前连接的战场.战场ID, 当前玩家))
         {
             通用提示框.显示("已退出战场");
-
-            // 清理UI
-            当前连接的战场 = null;
-
-            // 停止Boss攻击冷却协程
-            if (Boss攻击冷却协程 != null)
-            {
-                StopCoroutine(Boss攻击冷却协程);
-                Boss攻击冷却协程 = null;
-            }
-            Boss攻击冷却中 = false;
-
-            // 关闭界面
+            停止倒计时();
             gameObject.SetActive(false);
         }
     }
 
-    /// <summary>
-    /// 攻击指定玩家（由按钮直接调用）
-    /// </summary>
     public void 攻击指定玩家(玩家数据 要攻击的玩家)
     {
-        if (要攻击的玩家 == null)
-        {
-            通用提示框.显示("目标玩家不存在！");
-            return;
-        }
+        if (要攻击的玩家 == null || 当前连接的战场 == null) return;
 
-        if (当前连接的战场 == null)
-        {
-            通用提示框.显示("未连接到战场！");
-            return;
-        }
-
-        if (当前连接的战场.战场状态 != 战场状态.进行中)
-        {
-            通用提示框.显示("战场未开始！");
-            return;
-        }
-
-        // 检查玩家是否在战场中
-        if (!当前连接的战场.参战玩家列表.Contains(当前玩家))
-        {
-            通用提示框.显示("你还没有进入战场！");
-            return;
-        }
-
-        // 使用战斗系统进行PVP攻击
         PVP攻击结果 攻击结果 = 战斗系统.玩家攻击玩家(当前玩家, 要攻击的玩家);
+        if (!攻击结果.攻击成功) return;
 
-        // 检查攻击是否成功
-        if (!攻击结果.攻击成功)
-        {
-            通用提示框.显示(攻击结果.错误信息);
-            return;
-        }
-
-        // 显示攻击结果
         string 结果信息 = $"攻击 {要攻击的玩家.姓名}，造成 {攻击结果.伤害值} 点伤害！";
-
         if (攻击结果.目标死亡)
         {
-            结果信息 += $" {要攻击的玩家.姓名} 被击败了！";
-
-            // 击败敌方玩家获得积分
+            结果信息 += $" {要攻击的玩家.姓名} 被击败了！本家族获得 10 积分！";
             添加家族积分(当前玩家, 10);
-            结果信息 += " 本家族获得 10 积分！";
-
-            // 死亡后立即刷新列表，移除死亡玩家
-            Debug.Log($"{要攻击的玩家.姓名} 死亡，刷新敌方玩家列表");
             刷新玩家对象列表();
         }
-        else
-        {
-            结果信息 += $" 剩余生命值: {攻击结果.剩余生命值}";
-        }
-
         通用提示框.显示(结果信息);
-
-        // 测试用：让当前玩家死亡来测试复活弹窗功能
-        Debug.Log("[测试] 攻击完成，现在让当前玩家死亡来测试复活功能");
         战斗系统.测试当前玩家死亡();
     }
 
-    /// <summary>
-    /// 添加家族积分
-    /// </summary>
-    /// <param name="玩家">获得积分的玩家</param>
-    /// <param name="积分">要添加的积分</param>
     private void 添加家族积分(玩家数据 玩家, int 积分)
     {
-        if (当前连接的战场 == null || 玩家 == null || 玩家.家族 == null) return;
+        if (当前连接的战场 == null || 玩家?.家族 == null) return;
 
-        // 判断玩家属于哪个家族，给对应家族加积分
         if (玩家.家族 == 当前连接的战场.家族1)
-        {
             当前连接的战场.家族1积分 += 积分;
-            Debug.Log($"家族1 {当前连接的战场.家族1.家族名字} 获得 {积分} 积分，总积分: {当前连接的战场.家族1积分}");
-        }
         else if (玩家.家族 == 当前连接的战场.家族2)
-        {
             当前连接的战场.家族2积分 += 积分;
-            Debug.Log($"家族2 {当前连接的战场.家族2.家族名字} 获得 {积分} 积分，总积分: {当前连接的战场.家族2积分}");
+    }
+
+    private void 启动战场倒计时()
+    {
+        if (当前连接的战场 == null || 倒计时进行中) return;
+
+        当前剩余时间 = 战场总时长;
+        倒计时进行中 = true;
+        是否加时阶段 = false;
+        倒计时协程 = StartCoroutine(倒计时循环());
+    }
+
+    private IEnumerator 倒计时循环()
+    {
+        while (倒计时进行中 && 当前剩余时间 > 0)
+        {
+            yield return new WaitForSeconds(1f);
+            当前剩余时间 -= 1f;
+        }
+        if (倒计时进行中) 处理倒计时结束();
+    }
+
+    private void 处理倒计时结束()
+    {
+        if (当前连接的战场 == null) return;
+
+        int 家族1积分 = 当前连接的战场.家族1积分;
+        int 家族2积分 = 当前连接的战场.家族2积分;
+
+        if (家族1积分 > 家族2积分)
+            宣布战场结果(当前连接的战场.家族1, "时间结束，积分领先");
+        else if (家族2积分 > 家族1积分)
+            宣布战场结果(当前连接的战场.家族2, "时间结束，积分领先");
+        else
+        {
+            if (!是否加时阶段) 开始加时阶段();
+            else 宣布战场结果(null, "加时结束，双方平分");
+        }
+    }
+
+    private void 开始加时阶段()
+    {
+        是否加时阶段 = true;
+        当前剩余时间 = 加时时长;
+        通用提示框.显示($"双方积分相同！进入{加时时长 / 60}分钟加时赛！");
+        倒计时协程 = StartCoroutine(倒计时循环());
+    }
+
+    private void 宣布战场结果(家族信息库 获胜家族, string 获胜原因)
+    {
+        倒计时进行中 = false;
+
+        if (获胜家族 != null)
+        {
+            Debug.Log($"战场结束！{获胜家族.家族名字} 获胜！原因：{获胜原因}");
+            通用提示框.显示($"战场结束！{获胜家族.家族名字} 获胜！\n原因：{获胜原因}");
+        }
+        else
+        {
+            Debug.Log($"战场结束！双方平局！原因：{获胜原因}");
+            通用提示框.显示($"战场结束！双方平局！\n原因：{获胜原因}");
+        }
+
+        // 重要：调用战场管理器的结束战场方法，执行胜利家族族长登顶等逻辑
+        if (战场管理器.Instance != null && 当前连接的战场 != null)
+        {
+            Debug.Log("调用战场管理器结束战场方法...");
+            // 使用反射调用私有方法，或者建议将战场管理器中的结束战场方法改为public
+            var 战场管理器类型 = 战场管理器.Instance.GetType();
+            var 结束战场方法 = 战场管理器类型.GetMethod("结束战场", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            
+            if (结束战场方法 != null)
+            {
+                结束战场方法.Invoke(战场管理器.Instance, new object[] { 当前连接的战场, 获胜家族 });
+                Debug.Log("成功调用战场管理器结束战场方法");
+            }
+            else
+            {
+                Debug.LogError("未找到战场管理器的结束战场方法！请检查方法名称或访问级别");
+            }
+        }
+        else
+        {
+            Debug.LogError("战场管理器实例为空或当前连接的战场为空，无法执行结束战场逻辑");
+        }
+
+        // 延迟关闭界面
+        Invoke(nameof(延迟关闭界面), 3f);
+    }
+
+    private void 延迟关闭界面()
+    {
+        gameObject.SetActive(false);
+    }
+
+    private void 检查胜利条件()
+    {
+        if (当前连接的战场 == null || !倒计时进行中) return;
+
+        int 胜利积分 = 100;
+        if (当前连接的战场.家族1积分 >= 胜利积分)
+            宣布战场结果(当前连接的战场.家族1, "率先达到胜利积分");
+        else if (当前连接的战场.家族2积分 >= 胜利积分)
+            宣布战场结果(当前连接的战场.家族2, "率先达到胜利积分");
+    }
+
+    private void 更新倒计时显示()
+    {
+        if (战场倒计时显示 == null || !倒计时进行中) return;
+
+        int 分钟 = Mathf.FloorToInt(当前剩余时间 / 60);
+        int 秒数 = Mathf.FloorToInt(当前剩余时间 % 60);
+        string 倒计时文本 = $"{分钟:D2}:{秒数:D2}";
+
+        if (是否加时阶段)
+        {
+            倒计时文本 = $"加时 {倒计时文本}";
+            战场倒计时显示.color = Color.red;
+        }
+        else
+        {
+            倒计时文本 = $"剩余 {倒计时文本}";
+            if (当前剩余时间 <= 300) 战场倒计时显示.color = Color.red;
+            else if (当前剩余时间 <= 600) 战场倒计时显示.color = Color.yellow;
+            else 战场倒计时显示.color = Color.white;
+        }
+        战场倒计时显示.text = 倒计时文本;
+    }
+
+    private void 停止倒计时()
+    {
+        倒计时进行中 = false;
+        if (倒计时协程 != null)
+        {
+            StopCoroutine(倒计时协程);
+            倒计时协程 = null;
         }
     }
 }
