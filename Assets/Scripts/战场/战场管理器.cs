@@ -11,7 +11,7 @@ public class 战场管理器 : MonoBehaviour
     public 国家功能显示 国家功能显示;
 
     [Header("战场设置")]
-    private float 准备时间 = 10f; // 5分钟倒计时
+    private float 准备时间 = 60f; // 5分钟倒计时
 
     // 战场类型固定ID
     private const int 王城战战场ID = 1;

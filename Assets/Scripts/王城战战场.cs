@@ -35,19 +35,9 @@ public class 王城战战场 : MonoBehaviour
 
     private float 上次刷新时间 = 0f;
     private float 刷新间隔 = 0.5f;
-    private int 上次敌方玩家数量 = -1;
-
     private bool Boss攻击冷却中 = false;
     private float Boss攻击冷却时间 = 3f;
     private Coroutine Boss攻击冷却协程;
-
-    //private float 战场总时长 = 1800f;
-    private float 战场总时长 = 60f;
-    private float 加时时长 = 300f;
-    private float 当前剩余时间 = 0f;
-    private bool 倒计时进行中 = false;
-    private bool 是否加时阶段 = false;
-    private Coroutine 倒计时协程;
 
     public void 刷新玩家对象列表()
     {
@@ -86,7 +76,7 @@ public class 王城战战场 : MonoBehaviour
             }
         }
 
-        上次敌方玩家数量 = count;
+        // 移除：不再需要更新敌方玩家数量
     }
 
     private void Start()
@@ -109,7 +99,6 @@ public class 王城战战场 : MonoBehaviour
         {
             刷新战场显示();
             刷新玩家对象列表();
-            启动战场倒计时();
         }
     }
 
@@ -120,10 +109,9 @@ public class 王城战战场 : MonoBehaviour
 
     private void Update()
     {
-        if (当前连接的战场 != null && Time.time - 上次刷新时间 > 刷新间隔)
+        if (当前连接的战场 != null)
         {
             刷新战场显示();
-            上次刷新时间 = Time.time;
         }
         更新倒计时显示();
     }
@@ -177,20 +165,6 @@ public class 王城战战场 : MonoBehaviour
             家族1积分.text = 当前连接的战场.家族1积分.ToString();
         if (家族2积分 != null)
             家族2积分.text = 当前连接的战场.家族2积分.ToString();
-
-        检查胜利条件();
-        检查并更新敌方玩家列表();
-        更新Boss攻击按钮状态();
-    }
-
-    private void 检查并更新敌方玩家列表()
-    {
-        List<玩家数据> 最新敌方玩家列表 = 获取当前敌方玩家列表();
-        if (最新敌方玩家列表.Count != 上次敌方玩家数量)
-        {
-            已加入战场敌方玩家列表 = 最新敌方玩家列表;
-            刷新玩家对象列表();
-        }
     }
 
     private void 更新Boss攻击按钮状态()
@@ -271,7 +245,6 @@ public class 王城战战场 : MonoBehaviour
         if (战场管理器.Instance.玩家退出战场(当前连接的战场.战场ID, 当前玩家))
         {
             通用提示框.显示("已退出战场");
-            停止倒计时();
             gameObject.SetActive(false);
         }
     }
@@ -302,110 +275,6 @@ public class 王城战战场 : MonoBehaviour
             当前连接的战场.家族1积分 += 积分;
         else if (玩家.家族 == 当前连接的战场.家族2)
             当前连接的战场.家族2积分 += 积分;
-    }
-
-    private void 启动战场倒计时()
-    {
-        if (当前连接的战场 == null || 倒计时进行中) return;
-
-        当前剩余时间 = 战场总时长;
-        倒计时进行中 = true;
-        是否加时阶段 = false;
-        倒计时协程 = StartCoroutine(倒计时循环());
-    }
-
-    private IEnumerator 倒计时循环()
-    {
-        while (倒计时进行中 && 当前剩余时间 > 0)
-        {
-            yield return new WaitForSeconds(1f);
-            当前剩余时间 -= 1f;
-        }
-        if (倒计时进行中) 处理倒计时结束();
-    }
-
-    private void 处理倒计时结束()
-    {
-        if (当前连接的战场 == null) return;
-
-        int 家族1积分 = 当前连接的战场.家族1积分;
-        int 家族2积分 = 当前连接的战场.家族2积分;
-
-        if (家族1积分 > 家族2积分)
-            宣布战场结果(当前连接的战场.家族1, "时间结束，积分领先");
-        else if (家族2积分 > 家族1积分)
-            宣布战场结果(当前连接的战场.家族2, "时间结束，积分领先");
-        else
-        {
-            if (!是否加时阶段) 开始加时阶段();
-            else 宣布战场结果(null, "加时结束，双方平分");
-        }
-    }
-
-    private void 开始加时阶段()
-    {
-        是否加时阶段 = true;
-        当前剩余时间 = 加时时长;
-        通用提示框.显示($"双方积分相同！进入{加时时长 / 60}分钟加时赛！");
-        倒计时协程 = StartCoroutine(倒计时循环());
-    }
-
-    private void 宣布战场结果(家族信息库 获胜家族, string 获胜原因)
-    {
-        倒计时进行中 = false;
-
-        if (获胜家族 != null)
-        {
-            Debug.Log($"战场结束！{获胜家族.家族名字} 获胜！原因：{获胜原因}");
-            通用提示框.显示($"战场结束！{获胜家族.家族名字} 获胜！\n原因：{获胜原因}");
-        }
-        else
-        {
-            Debug.Log($"战场结束！双方平局！原因：{获胜原因}");
-            通用提示框.显示($"战场结束！双方平局！\n原因：{获胜原因}");
-        }
-
-        // 重要：调用战场管理器的结束战场方法，执行胜利家族族长登顶等逻辑
-        if (战场管理器.Instance != null && 当前连接的战场 != null)
-        {
-            Debug.Log("调用战场管理器结束战场方法...");
-            // 使用反射调用私有方法，或者建议将战场管理器中的结束战场方法改为public
-            var 战场管理器类型 = 战场管理器.Instance.GetType();
-            var 结束战场方法 = 战场管理器类型.GetMethod("结束战场", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            
-            if (结束战场方法 != null)
-            {
-                结束战场方法.Invoke(战场管理器.Instance, new object[] { 当前连接的战场, 获胜家族 });
-                Debug.Log("成功调用战场管理器结束战场方法");
-            }
-            else
-            {
-                Debug.LogError("未找到战场管理器的结束战场方法！请检查方法名称或访问级别");
-            }
-        }
-        else
-        {
-            Debug.LogError("战场管理器实例为空或当前连接的战场为空，无法执行结束战场逻辑");
-        }
-
-        // 延迟关闭界面
-        Invoke(nameof(延迟关闭界面), 3f);
-    }
-
-    private void 延迟关闭界面()
-    {
-        gameObject.SetActive(false);
-    }
-
-    private void 检查胜利条件()
-    {
-        if (当前连接的战场 == null || !倒计时进行中) return;
-
-        int 胜利积分 = 100;
-        if (当前连接的战场.家族1积分 >= 胜利积分)
-            宣布战场结果(当前连接的战场.家族1, "率先达到胜利积分");
-        else if (当前连接的战场.家族2积分 >= 胜利积分)
-            宣布战场结果(当前连接的战场.家族2, "率先达到胜利积分");
     }
 
     /// <summary>
@@ -454,15 +323,5 @@ public class 王城战战场 : MonoBehaviour
         }
 
         战场倒计时显示.text = 倒计时文本;
-    }
-
-    private void 停止倒计时()
-    {
-        倒计时进行中 = false;
-        if (倒计时协程 != null)
-        {
-            StopCoroutine(倒计时协程);
-            倒计时协程 = null;
-        }
     }
 }
