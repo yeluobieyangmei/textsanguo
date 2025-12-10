@@ -34546,6 +34546,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   "\u738B\u57CE\u6218\u6218\u573A": {fileID: 1402124113}
   "\u56FD\u5BB6\u529F\u80FD\u663E\u793A": {fileID: 1491644564}
+  "\u6218\u573A\u5165\u53E3\u7BA1\u7406\u5668": {fileID: 1247145868}
 --- !u!1 &2116008088
 GameObject:
   m_ObjectHideFlags: 0

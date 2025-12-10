@@ -42,6 +42,9 @@ public class 王城战战场 : MonoBehaviour
     public void 刷新玩家对象列表()
     {
         要克隆的对象.gameObject.SetActive(false);
+        
+        // 重新获取当前有效的敌方玩家列表（过滤阵亡玩家）
+        已加入战场敌方玩家列表 = 获取当前敌方玩家列表();
         int count = 已加入战场敌方玩家列表.Count;
 
         foreach (var obj in 克隆池)
