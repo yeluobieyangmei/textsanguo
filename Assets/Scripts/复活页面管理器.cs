@@ -166,12 +166,35 @@ public class 复活页面管理器 : MonoBehaviour
             战场实例 玩家战场 = 战场管理器.Instance.获取玩家战场(死亡玩家);
             if (玩家战场 != null)
             {
-                战场管理器.Instance.玩家退出战场(玩家战场.战场ID, 死亡玩家);
-                通用提示框.显示("已退出战场");
+                // 退出战场数据
+                if (战场管理器.Instance.玩家退出战场(玩家战场.战场ID, 死亡玩家))
+                {
+                    通用提示框.显示("已退出战场");
+
+                    // 关闭战场UI（如果当前玩家是死亡的玩家）
+                    if (死亡玩家.ID == 全局变量.当前身份)
+                    {
+                        关闭战场UI();
+                    }
+                }
             }
         }
 
         隐藏弹窗();
+    }
+
+    /// <summary>
+    /// 关闭战场UI
+    /// </summary>
+    private void 关闭战场UI()
+    {
+        // 查找并关闭王城战战场UI
+        王城战战场 战场UI = GameObject.FindObjectOfType<王城战战场>();
+        if (战场UI != null && 战场UI.gameObject.activeInHierarchy)
+        {
+            战场UI.gameObject.SetActive(false);
+            Debug.Log("复活弹窗退出战场：已关闭战场UI");
+        }
     }
 
     /// <summary>
