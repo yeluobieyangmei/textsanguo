@@ -17,6 +17,8 @@ public class 战场入口管理器 : MonoBehaviour
     private 战场实例 当前战场;
     private bool 已显示提示 = false;
     private bool 已显示30秒提示 = false; // 新增：记录是否已显示30秒提示
+    private bool 用户手动关闭 = false; // 新增：记录用户是否手动关闭了UI
+    private bool UI当前显示状态 = false; // 新增：记录UI当前是否显示，避免重复操作
 
     private void Start()
     {
@@ -62,15 +64,21 @@ public class 战场入口管理器 : MonoBehaviour
             }
             else
             {
-                // 玩家已在战场中，隐藏入口提示
-                隐藏战场入口提示();
+                // 玩家已在战场中，只在UI正在显示时才隐藏
+                if (UI当前显示状态)
+                {
+                    隐藏战场入口提示();
+                }
             }
         }
         else
         {
-            // 没有战场时隐藏提示并重置状态
-            隐藏战场入口提示();
-            重置显示状态();
+            // 没有战场时，只在UI正在显示时才隐藏
+            if (UI当前显示状态)
+            {
+                隐藏战场入口提示();
+                重置显示状态();
+            }
         }
     }
 
@@ -81,8 +89,9 @@ public class 战场入口管理器 : MonoBehaviour
     {
         if (当前战场 == null) return;
 
-        // 如果战场在准备中且剩余时间小于等于30秒，显示提示
-        if (当前战场.战场状态 == 战场状态.准备中 && 当前战场.剩余准备时间 <= 30 && !已显示30秒提示)
+        // 如果战场在准备中且剩余时间小于等于UI显示阈值，显示提示
+        float UI显示阈值 = 战场管理器.Instance.UI显示阈值公开;
+        if (当前战场.战场状态 == 战场状态.准备中 && 当前战场.剩余准备时间 <= UI显示阈值 && !已显示30秒提示 && !用户手动关闭)
         {
             显示战场入口提示();
             已显示30秒提示 = true;
@@ -101,6 +110,8 @@ public class 战场入口管理器 : MonoBehaviour
     {
         已显示提示 = false;
         已显示30秒提示 = false;
+        用户手动关闭 = false; // 重置手动关闭标志
+        UI当前显示状态 = false; // 重置UI显示状态
     }
 
     private void 显示战场入口提示()
@@ -109,6 +120,7 @@ public class 战场入口管理器 : MonoBehaviour
 
         // 显示弹窗
         战场入口弹窗.SetActive(true);
+        UI当前显示状态 = true; // 更新显示状态
 
         // 更新提示文本
         if (战场提示文本 != null)
@@ -204,7 +216,11 @@ public class 战场入口管理器 : MonoBehaviour
     private void 隐藏战场入口提示()
     {
         if (战场入口弹窗 != null)
+        {
             战场入口弹窗.SetActive(false);
+            UI当前显示状态 = false; // 更新显示状态
+            Debug.Log("战场入口UI已隐藏"); // 修改日志信息
+        }
     }
 
     public void 点击进入战场()
@@ -235,9 +251,11 @@ public class 战场入口管理器 : MonoBehaviour
 
     public void 点击稍后进入()
     {
-        // 隐藏提示并重置状态
+        // 设置用户手动关闭标志
+        用户手动关闭 = true;
+        
+        // 隐藏提示
         隐藏战场入口提示();
-        重置显示状态();
 
         通用提示框.显示("你可以随时通过菜单进入战场");
     }

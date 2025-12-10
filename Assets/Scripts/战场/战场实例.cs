@@ -24,9 +24,7 @@ public class 战场实例
     public float 开始时间 { get; set; }
     public float 上次Boss攻击时间 { get; set; }
     
-    // 战场倒计时相关
-    public float 战场总时长 { get; set; } = 1800f; // 30分钟 = 1800秒
-    public float 加时时长 { get; set; } = 300f; // 5分钟 = 300秒
+    // 战场倒计时相关（时间配置由战场管理器统一管理）
     public float 当前剩余时间 { get; set; } = 0f;
     public bool 倒计时进行中 { get; set; } = false;
     public bool 是否加时阶段 { get; set; } = false;
