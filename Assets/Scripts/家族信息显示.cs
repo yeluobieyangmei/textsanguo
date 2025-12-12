@@ -11,6 +11,7 @@ public class 家族信息显示 : MonoBehaviour
     public GameObject 信息显示界面;
     public Button 退出家族按钮;
     public Button 解散家族按钮;
+    public 显示家族列表 显示家族列表;
     public void OnEnable()
     {
         刷新显示();
@@ -50,6 +51,11 @@ public class 家族信息显示 : MonoBehaviour
         }
     }
 
+    public void 点击加入家族()
+    {
+        显示家族列表.gameObject.SetActive(true);
+    }
+
     public void 解散家族()
     {
         玩家数据 当前玩家 = 全局变量.所有玩家数据表[全局变量.当前身份];
@@ -57,6 +63,27 @@ public class 家族信息显示 : MonoBehaviour
         {
             刷新显示();
         }
+    }
+
+    public void 退出家族()
+    {
+        玩家数据 当前玩家 = 全局变量.所有玩家数据表[全局变量.当前身份];
+        if (当前玩家.家族 != null)
+        {
+            if (当前玩家.家族.王城战是否战斗中)
+            {
+                通用提示框.显示("家族正在战斗中,不可操作!");
+                return ;
+            }
+
+            家族信息库 当前家族 = 当前玩家.家族;
+            当前家族.家族成员.Remove(当前玩家);
+            当前玩家.家族 = null;
+            this.刷新显示();
+            return ;
+        }
+        通用提示框.显示("当前没有家族!");
+        return ;
     }
 
     public void 捐献()

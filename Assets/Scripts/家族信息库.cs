@@ -17,6 +17,8 @@ namespace 国家系统
         public int 国家排名 { get; set; }
         public int 世界排名 { get; set; }
         public int 家族王城战积分 { get; set; }
+        public bool 王城战是否宣战 { get; set; } = false;
+        public bool 王城战是否战斗中 { get; set; } = false;
         public List<玩家数据> 家族成员 = new List<玩家数据> ();
 
         public void 创建一个家族(string 家族名字, 玩家数据 族长)
